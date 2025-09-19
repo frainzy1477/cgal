@@ -294,9 +294,7 @@ void test_bool()
           bool_assert(indet.is_same(CGAL_OR(indet, ufalse)));
 
         } catch (CGAL::Uncertain_conversion_exception&) {
-#ifndef CGAL_CFG_NO_STATEMENT_EXPRESSIONS
          std::abort();
-#endif
         }
 
         // Test exceptions
@@ -350,10 +348,10 @@ void test_enum_cast()
         typedef CGAL::Uncertain<CGAL::Angle> Ua;
 
         Us s;
-        Ub b = CGAL::enum_cast<CGAL::Bounded_side>(s);
-        Ua a = CGAL::enum_cast<CGAL::Angle>(s);
+        Ub b = CGAL::enum_cast<Ub>(s);
+        Ua a = CGAL::enum_cast<Ua>(s);
         CGAL_USE(a);
-        s = CGAL::enum_cast<CGAL::Sign>(b);
+        s = CGAL::enum_cast<Us>(b);
 }
 
 int main()

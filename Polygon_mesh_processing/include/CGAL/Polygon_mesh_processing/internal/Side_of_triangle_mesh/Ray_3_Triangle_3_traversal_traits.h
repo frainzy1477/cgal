@@ -21,8 +21,8 @@
 #include <CGAL/tags.h>
 #include <CGAL/Bbox_3.h>
 #include <CGAL/Intersections_3/Ray_3_Triangle_3.h>
-#include <CGAL/internal/AABB_tree/Primitive_helper.h>
-#include <CGAL/internal/AABB_tree/AABB_node.h>
+#include <CGAL/AABB_tree/internal/Primitive_helper.h>
+#include <CGAL/AABB_tree/internal/AABB_node.h>
 
 namespace CGAL {
 namespace internal {
@@ -150,7 +150,7 @@ public:
       //check if the ray source is above or below the triangle and compare it
       //with the direction of the ray
       //TODO and if yes return
-      //this is just an optimisation, the current code is valid
+      //this is just an optimization, the current code is valid
 
       this->m_status.first=boost::logic::indeterminate;
       this->m_stop=true;

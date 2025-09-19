@@ -44,7 +44,7 @@ error.
 
 \tparam Primal_ must be a model of `FaceGraph`
 
-\cgalModels `FaceGraph`
+\cgalModels{FaceGraph}
 
 */
 template <typename Primal_>
@@ -128,7 +128,7 @@ struct Dual_vertex_index_pmap{
   typedef typename boost::graph_traits<G>::face_descriptor key_type;
   typedef typename Property_map::value_type value_type;
   typedef typename Property_map::reference reference;
-  typedef typename Property_map::category category;
+  typedef boost::readable_property_map_tag category;
 
   Dual_vertex_index_pmap(const G& g)
     : m_pmap( get(boost::face_index, g) )
@@ -147,7 +147,7 @@ struct Dual_face_index_pmap{
   typedef typename boost::graph_traits<G>::vertex_descriptor key_type;
   typedef typename Property_map::value_type value_type;
   typedef typename Property_map::reference reference;
-  typedef typename Property_map::category category;
+  typedef boost::readable_property_map_tag category;
 
   Dual_face_index_pmap(const G& g)
     : m_pmap( get(boost::vertex_index, g) )
@@ -306,7 +306,7 @@ edge(typename boost::graph_traits<Dual<P> >::vertex_descriptor u,
      const Dual<P>& dual)
 {
   typename boost::graph_traits<Dual<P> >::out_edge_iterator e, e_end;
-  for(boost::tie(e, e_end) = out_edges(u, dual); e != e_end; ++e) {
+  for(std::tie(e, e_end) = out_edges(u, dual); e != e_end; ++e) {
     if(target(*e, dual) == v)
       return std::make_pair(*e, true);
   }
@@ -391,7 +391,7 @@ halfedge(typename boost::graph_traits<Dual<P> >::vertex_descriptor u,
          const Dual<P>& dual)
 {
   typename boost::graph_traits<Dual<P> >::out_edge_iterator e, e_end;
-  for(boost::tie(e, e_end) = out_edges(u, dual); e != e_end; ++e) {
+  for(std::tie(e, e_end) = out_edges(u, dual); e != e_end; ++e) {
     if(target(*e, dual) == v)
       return std::make_pair(halfedge(*e, dual), true);
   }
@@ -458,7 +458,7 @@ out_degree(typename boost::graph_traits<Dual<P> >::vertex_descriptor v,
            const Dual<P>& dual)
 {
   const typename Dual<P>::Primal& primal = dual.primal();
-  return boost::distance(halfedges_around_face(halfedge(v,primal),primal));
+  return halfedges_around_face(halfedge(v,primal),primal).size();
 }
 
  template <typename P>

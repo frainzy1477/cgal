@@ -1,8 +1,9 @@
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polygon_mesh_processing/fair.h>
+
 #include <CGAL/Surface_mesh.h>
 
-#include <CGAL/Polygon_mesh_processing/fair.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include <CGAL/Timer.h>
 
@@ -14,7 +15,7 @@ typedef CGAL::Exact_predicates_exact_constructions_kernel Epec;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Epic;
 
 template <typename K>
-void test_polyhedron(const char* filename, const K&, const bool save_output)
+void test_polyhedron(const std::string filename, const K&, const bool save_output)
 {
   typedef CGAL::Surface_mesh<typename K::Point_3> Polyhedron;
   typedef typename Polyhedron::Vertex_index Vertex_index;
@@ -62,7 +63,7 @@ void test_polyhedron(const char* filename, const K&, const bool save_output)
 
 int main()
 {
-  const char* filename = "data/elephant.off";
+  const std::string filename = CGAL::data_file_path("meshes/elephant.off");
     test_polyhedron(filename, Epic(), false);
     test_polyhedron(filename, Epec(), false);
 

@@ -18,7 +18,7 @@
 #include <CGAL/IO/VTK/VTK_reader.h>
 #include <CGAL/IO/VTK/VTK_writer.h>
 
-#include <CGAL/boost/graph/Named_function_parameters.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 
 #ifdef CGAL_USE_VTK
@@ -26,16 +26,13 @@
 #include <vtkCommand.h>
 #include <vtkCell.h>
 #include <vtkXMLPolyDataReader.h>
+#include <vtkDataSetReader.h>
 #include <vtkPointSet.h>
 #include <vtkPolyData.h>
+#include <vtkUnstructuredGrid.h>
 #endif
 
 #if defined(CGAL_USE_VTK) || defined(DOXYGEN_RUNNING)
-
-#ifdef DOXYGEN_RUNNING
-#define CGAL_BGL_NP_TEMPLATE_PARAMETERS NamedParameters
-#define CGAL_BGL_NP_CLASS NamedParameters
-#endif
 
 namespace CGAL {
 namespace IO {
@@ -89,7 +86,6 @@ bool vtkPointSet_to_polygon_soup(vtkPointSet* poly_data,
   return true;
 }
 } // namespace internal
-} // namespace IO
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,25 +105,25 @@ bool read_VTP(const std::string& fname,
   }
 
   vtkSmartPointer<vtkPointSet> data;
-  vtkSmartPointer<IO::internal::ErrorObserverVtk> obs =
-      vtkSmartPointer<IO::internal::ErrorObserverVtk>::New();
+  vtkSmartPointer<internal::ErrorObserverVtk> obs =
+      vtkSmartPointer<internal::ErrorObserverVtk>::New();
 
-  data = vtkPolyData::SafeDownCast(IO::internal::read_vtk_file<vtkXMLPolyDataReader>(fname, obs)->GetOutput());
+  data = vtkPolyData::SafeDownCast(internal::read_vtk_file<vtkXMLPolyDataReader>(fname, obs)->GetOutput());
   if (obs->GetError())
     return false;
 
-  return IO::internal::vtkPointSet_to_polygon_soup(data, points, polygons, np);
+  return internal::vtkPointSet_to_polygon_soup(data, points, polygons, np);
 }
 
 /*!
- * \ingroup PkgStreamSupportIoFuncsVTP
+ * \ingroup PkgStreamSupportIoFuncsVTK
  *
  * \brief reads the content of the input file into `points` and `polygons`, using the \ref IOStreamVTK.
  *
  * \attention The polygon soup is not cleared, and the data from the file are appended.
  *
  * \tparam PointRange a model of the concepts `RandomAccessContainer` and `BackInsertionSequence`
- *                    whose value type is the point type
+ *                    whose `value_type` is the point type
  * \tparam PolygonRange a model of the concepts `SequenceContainer` and `BackInsertionSequence`
  *                      whose `value_type` is itself a model of the concept `SequenceContainer`
  *                      and `BackInsertionSequence` whose `value_type` is an unsigned integer type
@@ -143,14 +139,69 @@ bool read_VTP(const std::string& fname,
 template <typename PointRange, typename PolygonRange>
 bool read_VTP(const std::string& fname, PointRange& points, PolygonRange& polygons)
 {
-  return read_VTP(fname, points, polygons, parameters::all_default());
+  return read_VTP(fname, points, polygons, parameters::default_values());
+}
+
+
+template <typename PointRange, typename PolygonRange, typename NamedParameters>
+bool read_VTK(const std::string& fname,
+              PointRange& points,
+              PolygonRange& polygons,
+              const NamedParameters& np)
+{
+  std::ifstream test(fname);
+  if(!test.good())
+  {
+    std::cerr<<"File doesn't exist."<<std::endl;
+    return false;
+  }
+
+  vtkSmartPointer<vtkPointSet> data;
+  vtkSmartPointer<internal::ErrorObserverVtk> obs =
+      vtkSmartPointer<internal::ErrorObserverVtk>::New();
+  vtkSmartPointer<vtkDataSetReader> reader =
+    CGAL::IO::internal::read_vtk_file<vtkDataSetReader>(fname,obs);
+  data = vtkPolyData::SafeDownCast(reader->GetOutput());
+  if (!data)
+    data = vtkUnstructuredGrid::SafeDownCast(reader->GetOutput());
+
+  if (obs->GetError())
+    return false;
+
+  return internal::vtkPointSet_to_polygon_soup(data, points, polygons, np);
+}
+
+/*!
+ * \ingroup PkgStreamSupportIoFuncsVTK
+ *
+ * \brief reads the content of the input file into `points` and `polygons`, using the legacy file format of the \ref IOStreamVTK.
+ *
+ * \attention The polygon soup is not cleared, and the data from the file are appended.
+ *
+ * \tparam PointRange a model of the concepts `RandomAccessContainer` and `BackInsertionSequence`
+ *                    whose `value_type` is the point type
+ * \tparam PolygonRange a model of the concepts `SequenceContainer` and `BackInsertionSequence`
+ *                      whose `value_type` is itself a model of the concept `SequenceContainer`
+ *                      and `BackInsertionSequence` whose `value_type` is an unsigned integer type
+ *                      convertible to `std::size_t`
+ *
+ * \param fname the path to the input file
+ * \param points points of the soup of polygons
+ * \param polygons a range of polygons. Each element in it describes a polygon
+ *        using the indices of the points in `points`.
+ *
+ * \returns `true` if the reading was successful, `false` otherwise.
+ */
+template <typename PointRange, typename PolygonRange>
+bool read_VTK(const std::string& fname, PointRange& points, PolygonRange& polygons)
+{
+  return read_VTK(fname, points, polygons, parameters::default_values());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Write
 
-namespace IO {
 namespace internal {
 
 // writes the polys appended data at the end of the .vtp file
@@ -206,7 +257,7 @@ void write_soup_points_tag(std::ostream& os,
   {
     os << "\">\n";
     for(const Point& p : points)
-      os << oformat(p.x()) << " " << oformat(p.y()) << " " << oformat(p.z()) << " ";
+      os << IO::oformat(p.x()) << " " << IO::oformat(p.y()) << " " << IO::oformat(p.z()) << " ";
     os << "      </DataArray>\n";
   }
   os << "    </Points>\n";
@@ -345,14 +396,13 @@ void write_soup_polys_points(std::ostream& os,
 }
 
 } // namespace internal
-} // namespace IO
 
 /*!
- * \ingroup PkgStreamSupportIoFuncsVTP
+ * \ingroup PkgStreamSupportIoFuncsVTK
  *
  * \brief writes the content of `points` and `polygons` in `out`, using the \ref IOStreamVTK.
  *
- * \tparam PointRange a model of the concept `RandomAccessContainer` whose value type is the point type
+ * \tparam PointRange a model of the concept `RandomAccessContainer` whose `value_type` is the point type
  * \tparam PolygonRange a model of the concept `SequenceContainer`
  *                      whose `value_type` is itself a model of the concept `SequenceContainer`
  *                      whose `value_type` is an unsigned integer type convertible to `std::size_t`
@@ -366,7 +416,7 @@ void write_soup_polys_points(std::ostream& os,
  *
  * \cgalNamedParamsBegin
  *   \cgalParamNBegin{use_binary_mode}
- *     \cgalParamDescription{indicates whether data should be written in binary (`true`) or in ASCII (`false`)}
+ *     \cgalParamDescription{indicates whether data should be written in binary (`true`) or in \ascii (`false`)}
  *     \cgalParamType{Boolean}
  *     \cgalParamDefault{`true`}
  *   \cgalParamNEnd
@@ -374,7 +424,7 @@ void write_soup_polys_points(std::ostream& os,
  *   \cgalParamNBegin{stream_precision}
  *     \cgalParamDescription{a parameter used to set the precision (i.e. how many digits are generated) of the output stream}
  *     \cgalParamType{int}
- *     \cgalParamDefault{`the precision of the stream `os``}
+ *     \cgalParamDefault{the precision of the stream `os`}
  *   \cgalParamNEnd
  * \cgalNamedParamsEnd
  *
@@ -382,11 +432,11 @@ void write_soup_polys_points(std::ostream& os,
  */
 template <typename PointRange,
           typename PolygonRange,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool write_VTP(std::ostream& os,
                const PointRange& points,
                const PolygonRange& polygons,
-               const CGAL_BGL_NP_CLASS& np)
+               const CGAL_NP_CLASS& np = parameters::default_values())
 {
   using parameters::get_parameter;
   using parameters::choose_parameter;
@@ -421,36 +471,26 @@ bool write_VTP(std::ostream& os,
   const bool binary = choose_parameter(get_parameter(np, internal_np::use_binary_mode), true);
   std::vector<std::size_t> size_map;
   std::vector<unsigned char> cell_type;
-  IO::internal::write_soup_points_tag(os, points, binary, offset);
-  IO::internal::write_soup_polys_tag(os, polygons, binary, offset, size_map, cell_type);
+  internal::write_soup_points_tag(os, points, binary, offset);
+  internal::write_soup_polys_tag(os, polygons, binary, offset, size_map, cell_type);
 
   os << "   </Piece>\n"
      << "  </PolyData>\n";
   if(binary)
   {
     os << "<AppendedData encoding=\"raw\">\n_";
-    IO::internal::write_soup_polys_points(os, points);
-    IO::internal::write_soup_polys(os, polygons,size_map, cell_type);
+    internal::write_soup_polys_points(os, points);
+    internal::write_soup_polys(os, polygons,size_map, cell_type);
   }
   os << "</VTKFile>" << std::endl;
 }
 
-/// \cond SKIP_IN_MANUAL
-
-template <typename PointRange, typename PolygonRange>
-bool write_VTP(std::ostream& os, const PointRange& points, const PolygonRange& polygons)
-{
-  return write_VTP(os, points, polygons, parameters::all_default());
-}
-
-/// \endcond
-
 /*!
- * \ingroup PkgStreamSupportIoFuncsVTP
+ * \ingroup PkgStreamSupportIoFuncsVTK
  *
  * \brief writes the content of `points` and `polygons` in a file named `fname`, using the \ref IOStreamVTK.
  *
- * \tparam PointRange a model of the concept `RandomAccessContainer` whose value type is the point type
+ * \tparam PointRange a model of the concept `RandomAccessContainer` whose `valuetype` is the point type
  * \tparam PolygonRange a model of the concept `SequenceContainer`
  *                      whose `value_type` is itself a model of the concept `SequenceContainer`
  *                      whose `value_type` is an unsigned integer type convertible to `std::size_t`
@@ -464,7 +504,7 @@ bool write_VTP(std::ostream& os, const PointRange& points, const PolygonRange& p
  *
  * \cgalNamedParamsBegin
  *   \cgalParamNBegin{use_binary_mode}
- *     \cgalParamDescription{indicates whether data should be written in binary (`true`) or in ASCII (`false`)}
+ *     \cgalParamDescription{indicates whether data should be written in binary (`true`) or in \ascii (`false`)}
  *     \cgalParamType{Boolean}
  *     \cgalParamDefault{`true`}
  *   \cgalParamNEnd
@@ -478,36 +518,28 @@ bool write_VTP(std::ostream& os, const PointRange& points, const PolygonRange& p
  *
  * \return `true` if the writing was successful, `false` otherwise.
  */
-template <typename PointRange, typename PolygonRange, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+template <typename PointRange, typename PolygonRange, typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool write_VTP(const std::string& fname,
                const PointRange& points,
                const PolygonRange& polygons,
-               const CGAL_BGL_NP_CLASS& np)
+               const CGAL_NP_CLASS& np = parameters::default_values())
 {
   const bool binary = CGAL::parameters::choose_parameter(CGAL::parameters::get_parameter(np, internal_np::use_binary_mode), true);
   if(binary)
   {
     std::ofstream os(fname, std::ios::binary);
-    CGAL::set_mode(os, CGAL::IO::BINARY);
+    CGAL::IO::set_mode(os, CGAL::IO::BINARY);
     return write_VTP(os, points, polygons, np);
   }
   else
   {
     std::ofstream os(fname);
-    CGAL::set_mode(os, CGAL::IO::ASCII);
+    CGAL::IO::set_mode(os, CGAL::IO::ASCII);
     return write_VTP(os, points, polygons, np);
   }
 }
 
-/// \cond SKIP_IN_MANUAL
-
-template <typename PointRange, typename PolygonRange>
-bool write_VTP(const std::string& fname, const PointRange& points, const PolygonRange& polygons)
-{
-  return write_VTP(fname, points, polygons, parameters::all_default());
-}
-
-/// \endcond
+} // namespace IO
 
 } // namespace CGAL
 

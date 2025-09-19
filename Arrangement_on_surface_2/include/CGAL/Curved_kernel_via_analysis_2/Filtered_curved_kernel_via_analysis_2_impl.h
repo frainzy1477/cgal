@@ -5,7 +5,7 @@
 //
 // $URL$
 // $Id$
-// SPDX-License-Identifier: LGPL-3.0-or-later OR LicenseRef-Commercial
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
 //
 //
 // Author(s)     : Eric Berberich <eric@mpi-inf.mpg.de>
@@ -14,6 +14,9 @@
 
 #ifndef CGAL_FILTERED_CURVED_KERNEL_VIA_ANALYSIS_2_IMPL_H
 #define CGAL_FILTERED_CURVED_KERNEL_VIA_ANALYSIS_2_IMPL_H
+
+#include <CGAL/license/Arrangement_on_surface_2.h>
+
 
 /*!\file include/CGAL/Filtered_curved_kernel_via_analysis_2.h
  * \brief defines class \c Filtered_curved_kernel_via_analysis_2
@@ -98,10 +101,6 @@ public:
         return Base::operator()(p1, p2, equal_x);
     }
 };
-
-
-// TODO implement Compare_y_limit_on_boundary_2
-
 
 template < class CurvedKernelViaAnalysis_2, class FunctorBase >
 class Compare_y_near_boundary_2 :
@@ -550,7 +549,7 @@ public:
 
         if (!Base::_ckva()->may_have_intersection_2_object()(cv1, cv2)) {
             // return no one
-            CKvA_CERR("\nfilter: sucessfull\n");
+            CKvA_CERR("\nfilter: successful\n");
 
             CGAL_assertion_code(
             {
@@ -717,7 +716,7 @@ public:
     //! type of an arc on generic curve
     typedef internal::Arc_2< Self > Arc_2;
 
-    //! type of weakly x-monotone arc for \c ArrangementTraits_2
+    //! type of weakly x-monotone arc for \c AosTraits_2
     typedef Arc_2 X_monotone_curve_2;
 
     //!@}

@@ -23,16 +23,18 @@
 #endif
 
 #include <boost/range/value_type.hpp>
-#include <boost/utility/enable_if.hpp>
 
 #include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #if defined(CGAL_LINKED_WITH_3MF) || defined(DOXYGEN_RUNNING)
 
 namespace CGAL {
+
+namespace IO {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +398,7 @@ bool read_3MF(const std::string& fname,
  * \tparam ColorRanges a model of the concepts `RandomAccessContainer` and
  *                     `BackInsertionSequence` whose `value_type` is
  *                     a model of the concepts `RandomAccessContainer` and `BackInsertionSequence`
- *                     whose `value_type` is `CGAL::Color`
+ *                     whose `value_type` is `CGAL::IO::Color`
  *
  * \param fname the name of the 3mf file to read
  * \param all_points a `PointRanges` that will contain the points of the meshes in `fname`.
@@ -445,7 +447,7 @@ bool read_3MF(const std::string& fname,
  * \param fname the name of the 3mf file to write
  * \param all_points a `PointRanges` that contains the points of the soups to write
  * \param all_triangles a `TriangleRanges` that contains the triangles of the soups in `fname`
- * \param names a range of std::string` associating a name to each soup, which will appear in the output
+ * \param names a range of `std::string` associating a name to each soup, which will appear in the output
  *
  * \return `true` if the writing is successful, `false` otherwise.
  */
@@ -477,7 +479,7 @@ bool write_3MF(const std::string& fname,
       name = std::string("");
     }
 
-    std::vector<CGAL::Color> colors(all_triangles[id].size());
+    std::vector<CGAL::IO::Color> colors(all_triangles[id].size());
     IO::write_mesh_to_model(all_points[id], all_triangles[id], colors, name, &pMeshObject, pModel);
   }
 
@@ -502,12 +504,14 @@ bool write_3MF(const std::string& fname,
 
 template<typename PointRange, typename TriangleRange>
 bool write_3MF(const std::string& fname, const PointRange& points, const TriangleRange& triangles,
-               typename boost::enable_if<IO::internal::is_Range<PointRange> >::type* = nullptr)
+               std::enable_if_t<internal::is_Range<PointRange>::value>* = nullptr)
 {
   return write_triangle_soup_to_3mf(fname, points, triangles, "anonymous");
 }
 
 /// \endcond
+
+} // namespace IO
 
 } // namespace CGAL
 

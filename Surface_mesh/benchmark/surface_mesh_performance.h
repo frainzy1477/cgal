@@ -9,7 +9,7 @@
 #include <CGAL/boost/graph/IO/OFF.h>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh_simplification/edge_collapse.h>
-#include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Count_ratio_stop_predicate.h>
+#include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Edge_count_ratio_stop_predicate.h>
 #include <CGAL/Memory_sizer.h>
 
 typedef CGAL::Simple_cartesian<double> K;
@@ -53,7 +53,7 @@ private:
   virtual bool read_mesh(const char* _filename)
   {
     CGAL::Memory_sizer ms;
-    bool b = CGAL::read_OFF(mesh, _filename);
+    bool b = CGAL::IO::read_OFF(mesh, _filename);
     std::cout << "memory consumption: " << ms.virtual_size() << "  " << ms.resident_size() << std::endl;
     return b;
   }
@@ -61,7 +61,7 @@ private:
 
   virtual bool write_mesh(const char* _filename)
   {
-    return CGAL::write_OFF(mesh, _filename);
+    return CGAL::IO::write_OFF(mesh, _filename);
   }
 
 
@@ -283,8 +283,8 @@ private:
     namespace SMS = CGAL::Surface_mesh_simplification ;
 
     mesh.clear();
-    bool b = CGAL::read_OFF(_filename, mesh);
-    SMS::Count_ratio_stop_predicate<Surface_mesh> stop(0.1);
+    bool b = CGAL::IO::read_OFF(_filename, mesh);
+    SMS::Edge_count_ratio_stop_predicate<Surface_mesh> stop(0.1);
     int r = SMS::edge_collapse(mesh, stop);
   }
 

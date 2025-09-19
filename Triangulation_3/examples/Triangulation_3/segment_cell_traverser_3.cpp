@@ -22,22 +22,22 @@ typedef DT::Segment_cell_iterator                Segment_cell_iterator;
 
 int main(int argc, char* argv[])
 {
-  const char* fname = (argc>1) ? argv[1] : "data/blobby.xyz";
+  const std::string fname = (argc>1) ? argv[1] : CGAL::data_file_path("points_3/blobby.xyz");
 
   std::vector<Point_3> points;
-  if (!CGAL::read_points(fname, std::back_inserter(points)))
+  if (!CGAL::IO::read_points(fname, std::back_inserter(points)))
   {
     std::cerr << "Error: cannot read file " << fname << std::endl;
     return EXIT_FAILURE;
   }
 
   //bbox
-  double xmin = points[0].x();
-  double xmax = points[0].x();
-  double ymin = points[0].y();
-  double ymax = points[0].y();
-  double zmin = points[0].z();
-  double zmax = points[0].z();
+  auto xmin = points[0].x();
+  auto xmax = points[0].x();
+  auto ymin = points[0].y();
+  auto ymax = points[0].y();
+  auto zmin = points[0].z();
+  auto zmax = points[0].z();
 
   for(const Point_3& p : points)
   {

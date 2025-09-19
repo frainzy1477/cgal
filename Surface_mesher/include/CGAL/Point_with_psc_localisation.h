@@ -15,6 +15,10 @@
 
 #include <CGAL/license/Surface_mesher.h>
 
+#define CGAL_DEPRECATED_HEADER "<CGAL/Point_with_psc_localisation.h>"
+#define CGAL_DEPRECATED_MESSAGE_DETAILS \
+  "The 3D Mesh Generation package (see https://doc.cgal.org/latest/Mesh_3/) should be used instead."
+#include <CGAL/Installation/internal/deprecation_warning.h>
 
 #include <CGAL/Point_traits.h>
 
@@ -116,7 +120,7 @@ std::ostream&
 operator<<(std::ostream &os, const Point_with_psc_localisation<Point>& p)
 {
   os << static_cast<const Point&>(p);
-  if(is_ascii(os))
+  if(IO::is_ascii(os))
     os << ' ' << p.dimension() << ' ' << p.element_index();
   else {
     write(os, p.dimension());
@@ -131,7 +135,7 @@ operator>>(std::istream &is, Point_with_psc_localisation<Point>& p)
 {
   is >>  static_cast<Point&>(p);
   int index, dim;
-  if(is_ascii(is))
+  if(IO::is_ascii(is))
     is >> dim >> index;
   else {
     read(is, dim);

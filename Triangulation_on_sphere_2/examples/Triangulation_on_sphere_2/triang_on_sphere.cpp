@@ -36,11 +36,11 @@ int main(int, char**)
     std::cout << "It has:\n";
     std::cout << dtos.number_of_vertices() << " vertices\n";
     std::cout << dtos.number_of_edges() << " edges\n";
-    std::cout << dtos.number_of_faces() << " solid faces\n";
+    std::cout << dtos.number_of_solid_faces() << " solid faces\n";
     std::cout << dtos.number_of_ghost_faces() << " ghost faces\n" << std::endl;
   }
 
-  CGAL::write_OFF("result.off", dtos, CGAL::parameters::stream_precision(17));
+  CGAL::IO::write_OFF("result.off", dtos, CGAL::parameters::stream_precision(17));
 
   return EXIT_SUCCESS;
 }

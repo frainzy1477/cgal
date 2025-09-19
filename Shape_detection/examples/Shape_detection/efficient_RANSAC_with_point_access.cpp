@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
 
   // Load point set from a file.
 
-  if (!CGAL::read_points(
-      ((argc > 1) ? argv[1] : "data/cube.pwn"),
+  if (!CGAL::IO::read_points(
+      ((argc > 1) ? argv[1] : CGAL::data_file_path("points_3/cube.pwn")),
       std::back_inserter(points),
       CGAL::parameters::point_map(Point_map()).
       normal_map(Normal_map()))) {
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
   Efficient_ransac::Shape_range::iterator it = shapes.begin();
   while (it != shapes.end()) {
 
-    boost::shared_ptr<Efficient_ransac::Shape> shape = *it;
+    std::shared_ptr<Efficient_ransac::Shape> shape = *it;
 
     // Use Shape_base::info() to print the parameters of the detected shape.
     std::cout << (*it)->info();

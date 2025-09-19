@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <array>
 
 typedef CGAL::Homogeneous<CGAL::Exact_integer>   K;
 typedef CGAL::Min_sphere_annulus_d_traits_3<K>   Traits;
@@ -16,16 +17,16 @@ int
 main ()
 {
   const int n = 10;                        // number of points
-  Point         P[n];                  // n points
+  std::array<Point, n>         P;                  // n points
   CGAL::Random  r;                     // random number generator
 
   for (int i=0; i<n; ++i) {
-    P[i] = Point(r.get_int(0, 1000),r.get_int(0, 1000), r.get_int(0, 1000), 1 );
+    P.at(i) = Point(r.get_int(0, 1000),r.get_int(0, 1000), r.get_int(0, 1000), 1 );
   }
 
-  Min_sphere  ms (P, P+n);             // smallest enclosing sphere
+  Min_sphere  ms (P.begin(), P.end());             // smallest enclosing sphere
 
-  CGAL::set_pretty_mode (std::cout);
+  CGAL::IO::set_pretty_mode (std::cout);
   std::cout << ms;                     // output the sphere
 
   return 0;

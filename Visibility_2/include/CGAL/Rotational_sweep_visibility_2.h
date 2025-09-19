@@ -22,7 +22,6 @@
 #include <CGAL/bounding_box.h>
 #include <CGAL/assertions.h>
 #include <CGAL/Kernel/global_functions_2.h>
-#include <boost/unordered_map.hpp>
 #include <iterator>
 
 
@@ -120,7 +119,7 @@ private:
         return 1;
       case LEFT_TURN:
         return 2;
-      default: CGAL_assume(false);
+      default: CGAL_unreachable();
       }
       return -1;
     }
@@ -215,7 +214,7 @@ private:
                 == Visibility_2::orientation_2(geom_traits, s2, t2, s1);
           else
             return true;
-        default: CGAL_assume(false);
+        default: CGAL_unreachable();
         }
         break;
       case LEFT_TURN:
@@ -234,11 +233,11 @@ private:
                 == Visibility_2::orientation_2(geom_traits, s2, t2, s1);
           else
             return true;
-        default: CGAL_assume(false);
+        default: CGAL_unreachable();
         }
       }
 
-      CGAL_assume(false);
+      CGAL_unreachable();
       return false;
     }
 
@@ -807,7 +806,7 @@ private:
   }
 
   //for face query: traverse the face to get all edges
-  //and sort vertices in counter-clockwise order.
+  //and sort vertices in counterclockwise order.
   void input_face (Face_const_handle fh) const
   {
     Ccb_halfedge_const_circulator curr = fh->outer_ccb();
@@ -841,7 +840,7 @@ private:
     }
   }
   //for vertex or edge query: traverse the face to get all edges
-  //and sort vertices in counter-clockwise order.
+  //and sort vertices in counterclockwise order.
   void input_face (Face_const_handle fh,
                    EHs& good_edges,
                    Arrangement_2& bbox) const

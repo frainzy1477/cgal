@@ -73,7 +73,7 @@ class Nef_polyhedron_S2_rep {
 public:
   Nef_polyhedron_S2_rep() : sm_() {}
   Nef_polyhedron_S2_rep(const Self&) : sm_() {}
-  ~Nef_polyhedron_S2_rep() CGAL_NOEXCEPT(CGAL_NO_ASSERTIONS_BOOL)
+  ~Nef_polyhedron_S2_rep() noexcept(!CGAL_ASSERTIONS_ENABLED)
   {
     CGAL_destructor_assertion_catch(
       sm_.clear();
@@ -479,7 +479,7 @@ public:
 
   Self symmetric_difference(
     const Self& N1) const
-  /*{\Mop returns the symmectric difference |\Mvar - T| $\cup$
+  /*{\Mop returns the symmetric difference |\Mvar - T| $\cup$
           |T - \Mvar|. }*/
   { Self res(sphere_map(),false); // empty
     Overlayer D(&res.sphere_map());

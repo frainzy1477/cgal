@@ -7,8 +7,8 @@
 // $Id$
 // SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
 //
-//
-// Author(s)         : Oren Nechushtan <theoren@math.tau.ac.il>
+// Author(s): Oren Nechushtan <theoren@math.tau.ac.il>
+
 #ifndef CGAL_TD_TRAITS_H
 #define CGAL_TD_TRAITS_H
 
@@ -113,7 +113,7 @@ public:
                                           Td_inactive_fictitious_vertex;
 
   //! type of td map item (Td_halfedge, Td_vertex or Td_trapezoid)
-  typedef boost::variant< Td_nothing,
+  typedef std::variant< Td_nothing,
                           Td_active_trapezoid, Td_inactive_trapezoid,
                           Td_active_edge, Td_inactive_edge,
                           Td_active_vertex, Td_active_fictitious_vertex,
@@ -171,7 +171,7 @@ public:
     /*! The traits (in case it has state) */
     const Traits* m_traits;
 
-    /*! Constructor
+    /*! constructs
      * \param traits the traits (in case it has state)
      * The constructor is declared private to allow only the functor
      * obtaining function, which is a member of the nesting class,
@@ -245,12 +245,12 @@ public:
            (ce2_x_prm_spc == ARR_INTERIOR)  )
       {
         //both ce1 and ce2 are not y prm spc interior
-        Comparison_result res = m_traits->compare_x_at_limit_2_object()
+        Comparison_result res = m_traits->compare_x_on_boundary_2_object()
                                             (ce1.cv(),ce1.ce(),
                                              ce2.cv(),ce2.ce());
         if (res != EQUAL)
           return res;
-        //if equal need to compare near limit
+        //if equal need to compare near boundary
 
         //if param space in y is not the same (one is top and one is bottom)
         //  the bottom is smaller than the top
@@ -262,7 +262,7 @@ public:
           return (ce1.ce() == ARR_MIN_END) ? LARGER : SMALLER;
 
         //both have the same Curve end
-        return (m_traits->compare_x_near_limit_2_object()
+        return (m_traits->compare_x_near_boundary_2_object()
                                               (ce1.cv(),ce2.cv(),ce2.ce()));
       }
 
@@ -320,7 +320,7 @@ public:
                               (ce.cv(),ce.ce()) == ARR_INTERIOR)
       {
           //if curve end y prm space is not interior
-          return (m_traits->compare_x_at_limit_2_object()
+          return (m_traits->compare_x_on_boundary_2_object()
                                 (p,ce.cv(),ce.ce()));
       }
 
@@ -352,14 +352,11 @@ public:
 
   };
 
-  /*! Obtain a Compare_y_at_x_2 functor object. */
+  /*! obtains a Compare_curve_end_x_2 functor object. */
   Compare_curve_end_x_2 compare_curve_end_x_2_object () const
   {
     return Compare_curve_end_x_2(this);
   }
-
-
-
 
  /*! A functor that compares the y-coordinates of an edge end and a curve at
    * the point x-coordinate
@@ -374,7 +371,7 @@ public:
     /*! The traits (in case it has state) */
     const Traits* m_traits;
 
-    /*! Constructor
+    /*! constructs
      * \param traits the traits (in case it has state)
      * The constructor is declared private to allow only the functor
      * obtaining function, which is a member of the nesting class,
@@ -484,7 +481,7 @@ public:
 
   };
 
-  /*! Obtain a Compare_y_at_x_2 functor object. */
+  /*! obtains a Compare_y_at_x_2 functor object. */
   Compare_curve_end_y_at_x_2 compare_curve_end_y_at_x_2_object () const
   {
     return Compare_curve_end_y_at_x_2(this);
@@ -501,7 +498,7 @@ public:
     const Traits* m_traits;
     const Traits_base* m_traits_base; //MICHAL: rational-upd
 
-    /*! Constructor
+    /*! constructs
      * \param traits the traits (in case it has state)
      * The constructor is declared private to allow only the functor
      * obtaining function, which is a member of the nesting class,
@@ -589,7 +586,7 @@ public:
 
   };
 
-  /*! Obtain an Equal_curve_end_2 functor object. */
+  /*! obtains an Equal_curve_end_2 functor object. */
   Equal_curve_end_2 equal_curve_end_2_object () const
   {
     return Equal_curve_end_2(this);
@@ -604,7 +601,7 @@ public:
     /*! The traits (in case it has state) */
     const Traits* m_traits;
 
-    /*! Constructor
+    /*! constructs
      * \param traits the traits (in case it has state)
      * The constructor is declared private to allow only the functor
      * obtaining function, which is a member of the nesting class,
@@ -616,8 +613,7 @@ public:
     friend class Td_traits<Traits_base, Arrangement_on_surface_2>;
 
   public:
-    /*!
-     * Compare two edge ends lexigoraphically: by x, then by y.
+    /*! compares two edge ends lexigoraphically: by x, then by y.
      * \param cv1, cv1_end The first cv end.
      * \param cv2, cv2_end The second cv end.
      * \return LARGER if x(cv1-end) > x(cv2-end),
@@ -676,7 +672,7 @@ public:
         if ( is_ce2_vertical)
         {
           //res = m_traits->compare_x_near_boundary_2_object()
-          res = m_traits->compare_x_at_limit_2_object()
+          res = m_traits->compare_x_on_boundary_2_object()
                      (((ce1.ce() == ARR_MIN_END) ?
                        m_traits->construct_min_vertex_2_object()(ce1.cv()) :
                        m_traits->construct_max_vertex_2_object()(ce1.cv())  ),
@@ -705,7 +701,7 @@ public:
         if ( is_ce1_vertical )
         {
           //res = m_traits->compare_x_near_boundary_2_object()
-          res = m_traits->compare_x_at_limit_2_object()
+          res = m_traits->compare_x_on_boundary_2_object()
                      ((( ce2.ce() == ARR_MIN_END) ?
                        m_traits->construct_min_vertex_2_object()( ce2.cv()) :
                        m_traits->construct_max_vertex_2_object()( ce2.cv())  ),
@@ -732,7 +728,7 @@ public:
       //if both curve ends are of unbounded curves with a vertical asymptote
       if ( is_ce1_vertical && is_ce2_vertical )
       {
-        Comparison_result res = m_traits->compare_x_at_limit_2_object()
+        Comparison_result res = m_traits->compare_x_on_boundary_2_object()
                                             (ce1.cv(),ce1.ce(),
                                              ce2.cv(),ce2.ce());
 
@@ -740,7 +736,7 @@ public:
           return res;
 
         //res == EQUAL
-        //if equal - need to compare near limit
+        //if equal - need to compare near boundary
 
         Arr_parameter_space ce1_y_prm_spc =
           m_traits->parameter_space_in_y_2_object()(ce1.cv(),ce1.ce()) ;
@@ -757,8 +753,8 @@ public:
           return (ce1.ce() == ARR_MIN_END) ? LARGER : SMALLER;
 
         //both have the same Curve end
-        return (m_traits->compare_x_near_limit_2_object()
-                                          (ce1.cv(),ce2.cv(),ce2.ce()));
+        return (m_traits->compare_x_near_boundary_2_object()
+                (ce1.cv(),ce2.cv(),ce2.ce()));
       }
 
       //if only the first curve end is of a curve with a vertical asymptote
@@ -829,7 +825,7 @@ public:
       //  x prm spc is interior, y prm spc is not interior
       if ( is_ce_vertical)
       {
-        res = m_traits->compare_x_at_limit_2_object()
+        res = m_traits->compare_x_on_boundary_2_object()
                            (p, ce.cv(), ce.ce());
 
         if (res != EQUAL)
@@ -863,14 +859,11 @@ public:
     }
   };
 
-  /*! Obtain a Compare_curve_end_xy_2 functor object. */
+  /*! obtains a Compare_curve_end_xy_2 functor object. */
   Compare_curve_end_xy_2 compare_curve_end_xy_2_object () const
   {
     return Compare_curve_end_xy_2(this);
   }
-
-
-
 
   // Td_traits class ctors and dtor
 
@@ -898,8 +891,8 @@ public:
     CGAL_precondition(is_active(left_item) && is_active(right_item));
     CGAL_precondition(is_td_trapezoid(left_item) && is_td_trapezoid(right_item));
 
-    Td_active_trapezoid left (boost::get<Td_active_trapezoid>(left_item));
-    Td_active_trapezoid right(boost::get<Td_active_trapezoid>(right_item));
+    Td_active_trapezoid left (std::get<Td_active_trapezoid>(left_item));
+    Td_active_trapezoid right(std::get<Td_active_trapezoid>(right_item));
 
     if (left.is_on_bottom_boundary())
       return (right.is_on_bottom_boundary());
@@ -918,8 +911,8 @@ public:
     CGAL_precondition(is_active(left_item) && is_active(right_item));
     CGAL_precondition(is_td_trapezoid(left_item) && is_td_trapezoid(right_item));
 
-    Td_active_trapezoid left (boost::get<Td_active_trapezoid>(left_item));
-    Td_active_trapezoid right(boost::get<Td_active_trapezoid>(right_item));
+    Td_active_trapezoid left (std::get<Td_active_trapezoid>(left_item));
+    Td_active_trapezoid right(std::get<Td_active_trapezoid>(right_item));
 
     if (left.is_on_top_boundary())
       return (right.is_on_top_boundary());
@@ -932,7 +925,7 @@ public:
 
   /* returns true if bottom halfedges of input are the same */
   inline bool is_trapezoids_bottom_equal(const Td_active_trapezoid& left,
-                                                                       const Td_active_trapezoid& right) const
+                                         const Td_active_trapezoid& right) const
   {
     if (left.is_on_bottom_boundary())
       return (right.is_on_bottom_boundary());
@@ -946,7 +939,7 @@ public:
 
   /* returns true if top halfedges of input are the same */
   inline bool is_trapezoids_top_equal(const Td_active_trapezoid& left,
-                                                                    const Td_active_trapezoid& right) const
+                                      const Td_active_trapezoid& right) const
   {
     if (left.is_on_top_boundary())
       return (right.is_on_top_boundary());
@@ -960,13 +953,13 @@ public:
   //returns true if the trapezoid is a curve
   bool is_empty_item(const Td_map_item& tr) const
   {
-    return (tr.which() == 0);
+    return (tr.index() == 0);
   }
 
   //returns true if the trapezoid is a point or a curve
   bool is_trapezoid(const Td_map_item& tr) const
   {
-    switch (tr.which())
+    switch (tr.index())
     {
     case TD_ACTIVE_TRAPEZOID:
     case TD_INACTIVE_TRAPEZOID:
@@ -979,7 +972,7 @@ public:
   //returns true if the map item is a vertex
   bool is_td_vertex(const Td_map_item& tr) const
   {
-    switch (tr.which())
+    switch (tr.index())
     {
     case TD_ACTIVE_VERTEX:
     case TD_ACTIVE_FICTITIOUS_VERTEX:
@@ -994,7 +987,7 @@ public:
   //returns true if the map item is an edge
   bool is_td_edge(const Td_map_item& tr) const
   {
-    switch (tr.which())
+    switch (tr.index())
     {
     case TD_ACTIVE_EDGE:
     case TD_INACTIVE_EDGE:
@@ -1007,7 +1000,7 @@ public:
   //returns true if the map item is an edge
   bool is_td_trapezoid(const Td_map_item& tr) const
   {
-    switch (tr.which())
+    switch (tr.index())
     {
     case TD_ACTIVE_TRAPEZOID:
     case TD_INACTIVE_TRAPEZOID:
@@ -1020,7 +1013,7 @@ public:
   //returns true if the trapezoid is a curve
   bool is_fictitious_vertex(const Td_map_item& tr) const
   {
-    switch (tr.which())
+    switch (tr.index())
     {
     case TD_ACTIVE_FICTITIOUS_VERTEX:
     case TD_INACTIVE_FICTITIOUS_VERTEX:
@@ -1033,7 +1026,7 @@ public:
   //returns true if the trapezoid is a curve
   bool is_active(const Td_map_item& tr) const
   {
-    switch (tr.which())
+    switch (tr.index())
     {
       case TD_ACTIVE_TRAPEZOID:
       case TD_ACTIVE_EDGE:
@@ -1052,7 +1045,7 @@ public:
     CGAL_precondition(is_active(item));
     //MICHAL: assumes item is of active edge item - also fails in case of a vertical asymptote
     //MICHAL: check when this is used exactly
-    Td_active_edge& e (boost::get<Td_active_edge>(item));
+    Td_active_edge& e (std::get<Td_active_edge>(item));
     Halfedge_const_handle he = e.halfedge();
     return (this->compare_curve_end_x_2_object()
                (Curve_end(he,ARR_MIN_END), Curve_end(he,ARR_MAX_END))== EQUAL);
@@ -1064,7 +1057,7 @@ public:
   {
     CGAL_precondition( is_active(item) );
     CGAL_precondition( is_td_trapezoid(item) );
-    Td_active_trapezoid tr (boost::get<Td_active_trapezoid>(item));
+    Td_active_trapezoid tr (std::get<Td_active_trapezoid>(item));
 
     return
       ( tr.is_on_left_boundary() ||
@@ -1080,7 +1073,7 @@ public:
   }
 
   /*! returns true if the end point is inside the closure of the trapezoid
-      (inlcude all boundaries) */
+      (include all boundaries) */
   bool is_in_closure  (const Td_active_trapezoid& tr, const Curve_end& ce ) const
   {
     // test left and right sides
@@ -1100,7 +1093,7 @@ public:
 
       // test top side
       if (!tr.is_on_top_boundary() &&
-                compare_curve_end_y_at_x_2_object()(ce,tr.top()) == LARGER)
+          compare_curve_end_y_at_x_2_object()(ce,tr.top()) == LARGER)
       {
         return false;
       }
@@ -1110,7 +1103,7 @@ public:
     return false;
   }
   /*! returns true if the end point is inside the closure of the trapezoid
-      (inlcude all boundaries) */
+      (include all boundaries) */
   bool is_in_closure (const Td_active_edge& e, const Curve_end& ce ) const
   {
     // test left and right sides

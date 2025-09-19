@@ -1,4 +1,4 @@
-#include <CGAL/internal/disable_deprecation_warnings_and_errors.h> // because CGAL::copy_n is deprecated
+#include <CGAL/Installation/internal/disable_deprecation_warnings_and_errors.h> // because CGAL::copy_n is deprecated
 
 #include <boost/config.hpp>
 
@@ -13,7 +13,7 @@
 
 int main()
 {
-  CGAL::cpp0x::array<int, 3> arr;
+  CGAL::cpp0x::array<int, 3> arr{1, 2, 3};
   std::array<int, 3> arr2;
 
   CGAL::cpp0x::tuple<double, int> tuple;

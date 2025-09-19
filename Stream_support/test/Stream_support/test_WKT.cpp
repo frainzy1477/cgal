@@ -1,15 +1,12 @@
 #include <iostream>
 
-#if BOOST_VERSION >= 105600 && (! defined(BOOST_GCC) || BOOST_GCC >= 40500)
 #include <CGAL/IO/WKT.h>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-
-#include <boost/config.hpp>
-#include <boost/version.hpp>
-
 #include <fstream>
+#include <sstream>
 #include <vector>
+#include <cassert>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel           Kernel;
 
@@ -20,7 +17,69 @@ typedef std::vector<Point>                                            MultiPoint
 typedef std::vector<Linestring>                                       MultiLinestring;
 typedef std::vector<Poly>                                             MultiPolygon;
 
+
+typedef CGAL::Point_3<Kernel>                                         Point3;
+typedef std::vector<Point3>                                           Linestring3;
+typedef std::vector<Point3>                                           MultiPoint3;
+typedef std::vector<Linestring3>                                      MultiLinestring3;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool test_WKT_3D()
+{
+  {
+    Point3 p(1,2,3), q(0,0,0);
+    std::stringstream ss;
+    CGAL::IO::write_point_WKT(ss, p);
+    bool b = CGAL::IO::read_point_WKT(ss, q);
+    assert(b);
+    CGAL_USE(b);
+    assert(p == q);
+  }
+  {
+    Point3 p(1,2,3), q(3,2,1);
+    MultiPoint3  mp, mq;
+    mp.push_back(p);
+    mp.push_back(q);
+    std::stringstream ss;
+    CGAL::IO::write_multi_point_WKT(ss, mp);
+    bool b = CGAL::IO::read_multi_point_WKT(ss, mq);
+    assert(b);
+    CGAL_USE(b);
+    assert(mp == mq);
+  }
+  {
+    Point3 p(1,2,3), q(3,2,1);
+    Linestring3  mp, mq;
+    mp.push_back(p);
+    mp.push_back(q);
+    std::stringstream ss;
+    CGAL::IO::write_linestring_WKT(ss, mp);
+    bool b = CGAL::IO::read_linestring_WKT(ss, mq);
+    assert(b);
+    CGAL_USE(b);
+    assert(mp == mq);
+  }
+  {
+    Point3 p(1,2,3), q(3,2,1), r(4,5,6);
+    Linestring3  mp, mq;
+    mp.push_back(p);
+    mp.push_back(q);
+    mq.push_back(p);
+    mq.push_back(r);
+    MultiLinestring3  mmp, mmq;
+    mmp.push_back(mp);
+    mmp.push_back(mq);
+    std::stringstream ss;
+    CGAL::IO::write_multi_linestring_WKT(ss, mmp);
+    bool b = CGAL::IO::read_multi_linestring_WKT(ss, mmq);
+    assert(b);
+    CGAL_USE(b);
+    assert(mmp == mmq);
+  }
+  return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Read
 
@@ -29,44 +88,44 @@ bool test_read_WKT()
   Point p;
   {
     std::ifstream in("data/point.wkt");
-    if(!CGAL::read_point_WKT(in, p))
+    if(!CGAL::IO::read_point_WKT(in, p))
       return false;
-    CGAL_assertion(p == Point(2,3));
+    assert(p == Point(2,3));
   }
   {
     std::ifstream in("data/linestring.wkt");
     Linestring ls;
-    if(!CGAL::read_linestring_WKT(in, ls))
+    if(!CGAL::IO::read_linestring_WKT(in, ls))
       return false;
-    CGAL_assertion(ls.size() == 3);
+    assert(ls.size() == 3);
   }
   {
     Poly poly;
     std::ifstream in("data/polygon.wkt");
-    if(!CGAL::read_polygon_WKT(in, poly))
+    if(!CGAL::IO::read_polygon_WKT(in, poly))
       return false;
-    CGAL_assertion(poly.outer_boundary().size() == 3);
+    assert(poly.outer_boundary().size() == 3);
   }
   {
     MultiPoint pees;
     std::ifstream in("data/multipoint.wkt");
-    if(!CGAL::read_multi_point_WKT(in, pees))
+    if(!CGAL::IO::read_multi_point_WKT(in, pees))
       return false;
-    CGAL_assertion(pees.size() == 4);
+    assert(pees.size() == 4);
   }
   {
     std::ifstream in("data/multilinestring.wkt");
     MultiLinestring mls;
-    if(!CGAL::read_multi_linestring_WKT(in, mls))
+    if(!CGAL::IO::read_multi_linestring_WKT(in, mls))
       return false;
-    CGAL_assertion(mls.size() == 2);
+    assert(mls.size() == 2);
   }
   {
     MultiPolygon polies;
     std::ifstream in("data/multipolygon.wkt");
-    if(!CGAL::read_multi_polygon_WKT(in, polies))
+    if(!CGAL::IO::read_multi_polygon_WKT(in, polies))
       return false;
-    CGAL_assertion(polies.size() == 2);
+    assert(polies.size() == 2);
   }
 
   std::cout << "WKT reading test passed." << std::endl;
@@ -120,14 +179,14 @@ Poly generate_polygon()
   border.push_back(br);
 
   Poly::Polygon_2 hole1;
-  hole1.emplace_back((xt+xmax)/2, (ymin+ymid)/2);
-  hole1.emplace_back((xt+xmax)/2, ymid);
-  hole1.emplace_back(xt+(xmax-xt)/4, (ymin+ymid)/2);
+  hole1.push_back(Point((xt+xmax)/2, (ymin+ymid)/2));
+  hole1.push_back(Point((xt+xmax)/2, ymid));
+  hole1.push_back(Point(xt+(xmax-xt)/4, (ymin+ymid)/2));
 
   Poly::Polygon_2 hole2;
-  hole2.emplace_back((xt+xmin)/2, (ymin+ymid)/2);
-  hole2.emplace_back((xt+xmin)/2, ymid);
-  hole2.emplace_back(xmin+(xt-xmin)/4, (ymin+ymid)/2);
+  hole2.push_back(Point((xt+xmin)/2, (ymin+ymid)/2));
+  hole2.push_back(Point((xt+xmin)/2, ymid));
+  hole2.push_back(Point(xmin+(xt-xmin)/4, (ymin+ymid)/2));
 
   Poly::Holes_container holes;
   holes.push_back(hole1);
@@ -176,95 +235,95 @@ bool test_write_WKT()
   {
     std::ofstream os("test.wkt");
     os.precision(17);
-    CGAL::write_point_WKT(os, p);
+    CGAL::IO::write_point_WKT(os, p);
     os.close();
   }
   Point test_p;
   {
     std::ifstream is("test.wkt");
-    CGAL::read_point_WKT(is, test_p);
+    CGAL::IO::read_point_WKT(is, test_p);
     is.close();
   }
-  CGAL_assertion(p == test_p);
+  assert(p == test_p);
 
   Linestring ls = generate_linestring();
   {
     std::ofstream os("test.wkt");
     os.precision(17);
-    CGAL::write_linestring_WKT(os, ls);
+    CGAL::IO::write_linestring_WKT(os, ls);
     os.close();
   }
   Linestring test_ls;
   {
     std::ifstream is("test.wkt");
-    CGAL::read_linestring_WKT(is, test_ls);
+    CGAL::IO::read_linestring_WKT(is, test_ls);
     is.close();
   }
-  CGAL_assertion(ls == test_ls);
+  assert(ls == test_ls);
 
   Poly poly = generate_polygon();
   {
     std::ofstream os("test.wkt");
     os.precision(17);
-    CGAL::write_polygon_WKT(os, poly);
+    CGAL::IO::write_polygon_WKT(os, poly);
     os.close();
   }
   Poly test_poly;
   {
     std::ifstream is("test.wkt");
-    CGAL::read_polygon_WKT(is, test_poly);
+    CGAL::IO::read_polygon_WKT(is, test_poly);
     is.close();
   }
 
-  CGAL_assertion(poly == test_poly);
+  assert(poly == test_poly);
 
   MultiPoint pees = generate_multipoint();
   {
     std::ofstream os("test.wkt");
     os.precision(17);
-    CGAL::write_multi_point_WKT(os, pees);
+    CGAL::IO::write_multi_point_WKT(os, pees);
     os.close();
   }
   MultiPoint test_pees;
   {
     std::ifstream is("test.wkt");
-    CGAL::read_multi_point_WKT(is, test_pees);
+    CGAL::IO::read_multi_point_WKT(is, test_pees);
     is.close();
   }
-  CGAL_assertion(pees== test_pees);
+  assert(pees== test_pees);
 
   MultiLinestring mls = generate_multilinestring();
   {
     std::ofstream os("test.wkt");
     os.precision(17);
-    CGAL::write_multi_linestring_WKT(os, mls);
+    CGAL::IO::write_multi_linestring_WKT(os, mls);
     os.close();
   }
   MultiLinestring test_mls;
   {
     std::ifstream is("test.wkt");
-    CGAL::read_multi_linestring_WKT(is, test_mls);
+    CGAL::IO::read_multi_linestring_WKT(is, test_mls);
     is.close();
   }
   bool ok = true;
   for(size_t i=0; i<mls.size(); ++i)
     ok &= mls[i] == test_mls[i];
-  CGAL_assertion(ok);
+  assert(ok);
 
   MultiPolygon polies = generate_multipolygon();
   {
     std::ofstream os("test.wkt");
     os.precision(17);
-    CGAL::write_multi_polygon_WKT(os, polies);
+    CGAL::IO::write_multi_polygon_WKT(os, polies);
     os.close();
   }
   MultiPolygon test_polies;
   {
     std::ifstream is("test.wkt");
-    CGAL::read_multi_polygon_WKT(is, test_polies);
+    CGAL::IO::read_multi_polygon_WKT(is, test_polies);
     is.close();
   }
-  CGAL_assertion(polies == test_polies);
+  assert(polies == test_polies);
 
   std::cout << "WKT writing test passed." << std::endl;
   return true;
@@ -276,12 +335,8 @@ int main()
   assert(ok);
   ok = test_write_WKT();
   assert(ok);
+  ok = test_WKT_3D();
+  assert(ok);
 
   return EXIT_SUCCESS;
 }
-#else
-int main(int, char**)
-{
-  return EXIT_SUCCESS;
-}
-#endif

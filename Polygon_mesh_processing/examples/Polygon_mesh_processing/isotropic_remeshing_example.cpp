@@ -6,9 +6,9 @@
 
 #include <boost/iterator/function_output_iterator.hpp>
 
-#include <fstream>
-#include <vector>
+#include <iostream>
 #include <string>
+#include <vector>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel   K;
 typedef CGAL::Surface_mesh<K::Point_3>                        Mesh;
@@ -33,17 +33,17 @@ struct halfedge2edge
 
 int main(int argc, char* argv[])
 {
-  const char* filename = (argc > 1) ? argv[1] : "data/pig.off";
+  const std::string filename = (argc > 1) ? argv[1] : CGAL::data_file_path("meshes/pig.off");
 
   Mesh mesh;
-  if(!PMP::read_polygon_mesh(filename, mesh) || !CGAL::is_triangle_mesh(mesh))
+  if(!PMP::IO::read_polygon_mesh(filename, mesh) || !CGAL::is_triangle_mesh(mesh))
   {
     std::cerr << "Invalid input." << std::endl;
     return 1;
   }
 
   double target_edge_length = (argc > 2) ? std::stod(std::string(argv[2])) : 0.04;
-  unsigned int nb_iter = 3;
+  unsigned int nb_iter = (argc > 3) ? std::stoi(std::string(argv[3])) : 10;
 
   std::cout << "Split border...";
 
@@ -56,8 +56,10 @@ int main(int argc, char* argv[])
     << " (" << num_faces(mesh) << " faces)..." << std::endl;
 
   PMP::isotropic_remeshing(faces(mesh), target_edge_length, mesh,
-                           PMP::parameters::number_of_iterations(nb_iter)
-                           .protect_constraints(true)); //i.e. protect border, here
+                           CGAL::parameters::number_of_iterations(nb_iter)
+                                            .protect_constraints(true)); //i.e. protect border, here
+
+  CGAL::IO::write_polygon_mesh("out.off", mesh, CGAL::parameters::stream_precision(17));
 
   std::cout << "Remeshing done." << std::endl;
 

@@ -24,7 +24,6 @@
 #include <CGAL/Nef_S2/SM_decorator.h>
 #include <CGAL/Nef_3/SNC_structure.h>
 #include <CGAL/Nef_3/SNC_decorator.h>
-#include <CGAL/Nef_3/SNC_constructor.h>
 #include <CGAL/Nef_2/Object_index.h>
 #include <CGAL/Nef_S2/Normalizing.h>
 #include <vector>
@@ -38,7 +37,7 @@
 #include <CGAL/Nef_2/debug.h>
 
 #ifndef CGAL_I_DO_WANT_TO_USE_GENINFO
-#include <boost/any.hpp>
+#include <any>
 #endif
 
 #include <boost/mpl/has_xxx.hpp>
@@ -964,7 +963,7 @@ public:
   #ifdef CGAL_I_DO_WANT_TO_USE_GENINFO
   typedef void* GenPtr;
   #else
-  typedef boost::any GenPtr;
+  typedef std::any GenPtr;
   #endif
 
   using Base::visit_shell_objects;
@@ -1088,7 +1087,10 @@ public:
 
 template <typename EW>
 SNC_io_parser<EW>::SNC_io_parser(std::istream& is, SNC_structure& W) :
-  Base(W), in(is), out(std::cout) {
+  Base(W), in(is), out(std::cout),
+  reduce(false), sorted(false), addInfiBox(false),
+  i(0), vn(0), en(0), fn(0), cn(0), sen(0), sln(0), sfn(0)
+{
   W.clear();
   CGAL_assertion(W.is_empty());
   verbose = false;
@@ -1099,11 +1101,13 @@ template <typename EW>
 SNC_io_parser<EW>::SNC_io_parser(std::ostream& os, SNC_structure& W,
                                  bool sort, bool reduce_) :
   Base(W), in(std::cin), out(os),
+  addInfiBox(false),
   FI(W.halffacets_begin(),W.halffacets_end(),'F'),
   CI(W.volumes_begin(),W.volumes_end(),'C'),
   SEI(W.shalfedges_begin(),W.shalfedges_end(),'e'),
   SLI(W.shalfloops_begin(),W.shalfloops_end(),'l'),
   SFI(W.sfaces_begin(),W.sfaces_end(),'f'),
+  i(0),
   vn(W.number_of_vertices()),
   en(W.number_of_halfedges()),
   fn(W.number_of_halffacets()),
@@ -1112,8 +1116,8 @@ SNC_io_parser<EW>::SNC_io_parser(std::ostream& os, SNC_structure& W,
   sln(W.number_of_shalfloops()),
   sfn(W.number_of_sfaces())
 {
-  verbose = (get_mode(out) != CGAL::IO::ASCII &&
-             get_mode(out) != CGAL::IO::BINARY);
+  verbose = (IO::get_mode(out) != CGAL::IO::ASCII &&
+             IO::get_mode(out) != CGAL::IO::BINARY);
   sorted = sort;
   reduce = reduce_;
   reduce = reduce && this->is_extended_kernel() && this->is_bounded();

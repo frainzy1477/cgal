@@ -25,7 +25,7 @@
 #include <CGAL/generators.h>
 #include <CGAL/point_generators_2.h>
 #include <CGAL/number_type_basic.h>
-#include <CGAL/internal/Generic_random_point_generator.h>
+#include <CGAL/Generator/internal/Generic_random_point_generator.h>
 #include <CGAL/boost/graph/property_maps.h>
 
 namespace CGAL {
@@ -38,7 +38,7 @@ public:
     typedef Random_points_in_sphere_3<P,Creator> This;
     Random_points_in_sphere_3( double r = 1, Random& rnd = CGAL::get_default_random())
         // g is an input iterator creating points of type `P' uniformly
-        // distributed in the open sphere with radius r, i.e. |`*g'| < r .
+        // distributed in the open sphere with radius r, i.e., |`*g'| < r .
         // Three random numbers are needed from `rnd' for each point
     : Random_generator_base<P>( r, rnd) { generate_point(); }
     This& operator++()    {

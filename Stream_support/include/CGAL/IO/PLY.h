@@ -16,13 +16,12 @@
 #include <CGAL/IO/PLY/PLY_writer.h>
 #include <CGAL/IO/helpers.h>
 
-#include <CGAL/boost/graph/Named_function_parameters.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 #include <CGAL/property_map.h>
 #include <CGAL/iterator.h>
 
 #include <boost/range/value_type.hpp>
-#include <boost/utility/enable_if.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -31,11 +30,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#ifdef DOXYGEN_RUNNING
-#define CGAL_BGL_NP_TEMPLATE_PARAMETERS NamedParameters
-#define CGAL_BGL_NP_CLASS NamedParameters
-#endif
+#include <type_traits>
 
 namespace CGAL {
 
@@ -46,7 +41,7 @@ namespace CGAL {
 namespace IO {
 namespace internal {
 
-// HEdgesRange" = range of std::pair<unsigned int, unsigned int>
+// HEdgesRange = range of std::pair<unsigned int, unsigned int>
 // HUVRange = range of std::pair<float, float>
 template <class PointRange, class PolygonRange, class ColorOutputIterator, class HEdgesOutputIterator, class HUVOutputIterator>
 bool read_PLY(std::istream& is,
@@ -57,10 +52,10 @@ bool read_PLY(std::istream& is,
               ColorOutputIterator vc_out,
               HUVOutputIterator huvs_out,
               const bool verbose = false,
-              typename std::enable_if<CGAL::is_iterator<ColorOutputIterator>::value>::type* = nullptr)
+              std::enable_if_t<CGAL::is_iterator<ColorOutputIterator>::value>* = nullptr)
 {
   typedef typename boost::range_value<PointRange>::type     Point_3;
-  typedef CGAL::Color                                       Color_rgb;
+  typedef CGAL::IO::Color                                   Color_rgb;
 
   if(!is.good())
   {
@@ -69,7 +64,7 @@ bool read_PLY(std::istream& is,
     return false;
   }
 
-  IO::internal::PLY_reader reader(verbose);
+  internal::PLY_reader reader(verbose);
 
   if(!(reader.init(is)))
   {
@@ -79,20 +74,20 @@ bool read_PLY(std::istream& is,
 
   for(std::size_t i=0; i<reader.number_of_elements(); ++i)
   {
-    IO::internal::PLY_element& element = reader.element(i);
+    internal::PLY_element& element = reader.element(i);
 
     if(element.name() == "vertex" || element.name() == "vertices")
     {
       bool has_colors = false;
       std::string rtag = "r", gtag = "g", btag = "b";
 
-      if((element.has_property<boost::uint8_t>("red") || element.has_property<boost::uint8_t>("r")) &&
-         (element.has_property<boost::uint8_t>("green") || element.has_property<boost::uint8_t>("g")) &&
-         (element.has_property<boost::uint8_t>("blue") || element.has_property<boost::uint8_t>("b")))
+      if((element.has_property<std::uint8_t>("red") || element.has_property<std::uint8_t>("r")) &&
+         (element.has_property<std::uint8_t>("green") || element.has_property<std::uint8_t>("g")) &&
+         (element.has_property<std::uint8_t>("blue") || element.has_property<std::uint8_t>("b")))
       {
         has_colors = true;
 
-        if(element.has_property<boost::uint8_t>("red"))
+        if(element.has_property<std::uint8_t>("red"))
         {
           rtag = "red";
           gtag = "green";
@@ -104,31 +99,31 @@ bool read_PLY(std::istream& is,
       {
         for(std::size_t k=0; k<element.number_of_properties(); ++k)
         {
-          IO::internal::PLY_read_number* property = element.property(k);
+          internal::PLY_read_number* property = element.property(k);
           property->get(is);
 
           if(is.fail())
             return false;
         }
 
-        std::tuple<Point_3, boost::uint8_t, boost::uint8_t, boost::uint8_t> new_vertex;
+        std::tuple<Point_3, std::uint8_t, std::uint8_t, std::uint8_t> new_vertex;
         if(has_colors)
         {
-          IO::internal::process_properties(element, new_vertex,
-                                           make_ply_point_reader(CGAL::make_nth_of_tuple_property_map<0>(new_vertex)),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<1>(new_vertex),
-                                                          PLY_property<boost::uint8_t>(rtag.c_str())),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<2>(new_vertex),
-                                                          PLY_property<boost::uint8_t>(gtag.c_str())),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<3>(new_vertex),
-                                                          PLY_property<boost::uint8_t>(btag.c_str())));
+          internal::process_properties(element, new_vertex,
+                                       make_ply_point_reader(CGAL::make_nth_of_tuple_property_map<0>(new_vertex)),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<1>(new_vertex),
+                                                      PLY_property<std::uint8_t>(rtag.c_str())),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<2>(new_vertex),
+                                                      PLY_property<std::uint8_t>(gtag.c_str())),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<3>(new_vertex),
+                                                      PLY_property<std::uint8_t>(btag.c_str())));
 
           *vc_out++ = Color_rgb(get<1>(new_vertex), get<2>(new_vertex), get<3>(new_vertex));
         }
         else
         {
-          IO::internal::process_properties(element, new_vertex,
-                                            make_ply_point_reader(CGAL::make_nth_of_tuple_property_map<0>(new_vertex)));
+          internal::process_properties(element, new_vertex,
+                                       make_ply_point_reader(CGAL::make_nth_of_tuple_property_map<0>(new_vertex)));
         }
 
         points.push_back(get<0>(new_vertex));
@@ -136,21 +131,21 @@ bool read_PLY(std::istream& is,
     }
     else if(element.name() == "face" || element.name() == "faces")
     {
-      if(element.has_property<std::vector<boost::int32_t> >("vertex_indices"))
+      if(element.has_property<std::vector<std::int32_t> >("vertex_indices"))
       {
-        IO::internal::read_PLY_faces<boost::int32_t>(is, element, polygons, fc_out, "vertex_indices");
+        internal::read_PLY_faces<std::int32_t>(is, element, polygons, fc_out, "vertex_indices");
       }
-      else if(element.has_property<std::vector<boost::uint32_t> >("vertex_indices"))
+      else if(element.has_property<std::vector<std::uint32_t> >("vertex_indices"))
       {
-        IO::internal::read_PLY_faces<boost::uint32_t>(is, element, polygons, fc_out, "vertex_indices");
+        internal::read_PLY_faces<std::uint32_t>(is, element, polygons, fc_out, "vertex_indices");
       }
-      else if(element.has_property<std::vector<boost::int32_t> >("vertex_index"))
+      else if(element.has_property<std::vector<std::int32_t> >("vertex_index"))
       {
-        IO::internal::read_PLY_faces<boost::int32_t>(is, element, polygons, fc_out, "vertex_index");
+        internal::read_PLY_faces<std::int32_t>(is, element, polygons, fc_out, "vertex_index");
       }
-      else if(element.has_property<std::vector<boost::uint32_t> >("vertex_index"))
+      else if(element.has_property<std::vector<std::uint32_t> >("vertex_index"))
       {
-        IO::internal::read_PLY_faces<boost::uint32_t>(is, element, polygons, fc_out, "vertex_index");
+        internal::read_PLY_faces<std::uint32_t>(is, element, polygons, fc_out, "vertex_index");
       }
       else
       {
@@ -176,7 +171,7 @@ bool read_PLY(std::istream& is,
       {
         for(std::size_t k=0; k<element.number_of_properties(); ++k)
         {
-          IO::internal::PLY_read_number* property = element.property(k);
+          internal::PLY_read_number* property = element.property(k);
           property->get(is);
 
           if(is.fail())
@@ -185,26 +180,26 @@ bool read_PLY(std::istream& is,
 
         if(has_uv)
         {
-          IO::internal::process_properties(element, new_hedge,
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<0>(new_hedge),
-                                                          PLY_property<unsigned int>(stag.c_str())),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<1>(new_hedge),
-                                                          PLY_property<unsigned int>(ttag.c_str())),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<2>(new_hedge),
-                                                          PLY_property<float>(utag.c_str())),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<3>(new_hedge),
-                                                          PLY_property<float>(vtag.c_str())));
+          internal::process_properties(element, new_hedge,
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<0>(new_hedge),
+                                                      PLY_property<unsigned int>(stag.c_str())),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<1>(new_hedge),
+                                                      PLY_property<unsigned int>(ttag.c_str())),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<2>(new_hedge),
+                                                      PLY_property<float>(utag.c_str())),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<3>(new_hedge),
+                                                      PLY_property<float>(vtag.c_str())));
 
           *hedges_out++ = std::make_pair(get<0>(new_hedge), get<1>(new_hedge));
           *huvs_out++ = std::make_pair(get<2>(new_hedge), get<3>(new_hedge));
         }
         else
         {
-          IO::internal::process_properties(element, new_hedge,
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<0>(new_hedge),
-                                                          PLY_property<unsigned int>(stag.c_str())),
-                                           std::make_pair(CGAL::make_nth_of_tuple_property_map<1>(new_hedge),
-                                                          PLY_property<unsigned int>(ttag.c_str())));
+          internal::process_properties(element, new_hedge,
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<0>(new_hedge),
+                                                      PLY_property<unsigned int>(stag.c_str())),
+                                       std::make_pair(CGAL::make_nth_of_tuple_property_map<1>(new_hedge),
+                                                      PLY_property<unsigned int>(ttag.c_str())));
         }
       }
     }
@@ -214,7 +209,7 @@ bool read_PLY(std::istream& is,
       {
         for(std::size_t k=0; k<element.number_of_properties(); ++k)
         {
-          IO::internal::PLY_read_number* property = element.property(k);
+          internal::PLY_read_number* property = element.property(k);
           property->get(is);
           if(is.fail())
             return false;
@@ -226,7 +221,6 @@ bool read_PLY(std::istream& is,
 }
 
 } // namespace internal
-} // namespace IO
 
 /// \cond SKIP_IN_MANUAL
 
@@ -239,14 +233,14 @@ bool read_PLY(std::istream& is,
               ColorRange& vcolors,
               HUVRange& huvs,
               const bool verbose = false,
-              typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr)
+              std::enable_if_t<internal::is_Range<PolygonRange>::value>* = nullptr)
 {
-  return IO::internal::read_PLY(is, points, polygons,
-                                std::back_inserter(hedges),
-                                std::back_inserter(fcolors),
-                                std::back_inserter(vcolors),
-                                std::back_inserter(huvs),
-                                verbose);
+  return internal::read_PLY(is, points, polygons,
+                            std::back_inserter(hedges),
+                            std::back_inserter(fcolors),
+                            std::back_inserter(vcolors),
+                            std::back_inserter(huvs),
+                            verbose);
 }
 
 template <class PointRange, class PolygonRange, class ColorRange>
@@ -260,12 +254,12 @@ bool read_PLY(std::istream& is,
   std::vector<std::pair<unsigned int, unsigned int> > dummy_pui;
   std::vector<std::pair<float, float> > dummy_pf;
 
-  return IO::internal::read_PLY(is, points, polygons,
-                                std::back_inserter(dummy_pui),
-                                std::back_inserter(fcolors),
-                                std::back_inserter(vcolors),
-                                std::back_inserter(dummy_pf),
-                                verbose);
+  return internal::read_PLY(is, points, polygons,
+                            std::back_inserter(dummy_pui),
+                            std::back_inserter(fcolors),
+                            std::back_inserter(vcolors),
+                            std::back_inserter(dummy_pf),
+                            verbose);
 }
 
 /// \endcond
@@ -277,7 +271,7 @@ bool read_PLY(std::istream& is,
  *
  * \attention The polygon soup is not cleared, and the data from the stream are appended.
  *
- * \attention When reading a binary file, the flag `std::ios::binary` flag must be set during the creation of the `ifstream`.
+ * \attention To read a binary file, the flag `std::ios::binary` must be set during the creation of the `ifstream`.
  *
  * \tparam PointRange a model of the concepts `RandomAccessContainer` and `BackInsertionSequence`
  *                    whose value type is the point type
@@ -295,7 +289,7 @@ bool read_PLY(std::istream& is,
  *
  * \cgalNamedParamsBegin
  *   \cgalParamNBegin{use_binary_mode}
- *     \cgalParamDescription{indicates whether data should be read in binary (`true`) or in ASCII (`false`)}
+ *     \cgalParamDescription{indicates whether data should be read in binary (`true`) or in \ascii (`false`)}
  *     \cgalParamType{Boolean}
  *     \cgalParamDefault{`true`}
  *   \cgalParamNEnd
@@ -309,13 +303,13 @@ bool read_PLY(std::istream& is,
  *
  * \returns `true` if the reading was successful, `false` otherwise.
  */
-template <class PointRange, class PolygonRange, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+template <class PointRange, class PolygonRange, typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_PLY(std::istream& is,
               PointRange& points,
               PolygonRange& polygons,
-              const CGAL_BGL_NP_CLASS& np
+              const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-              , typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr
+              , std::enable_if_t<internal::is_Range<PolygonRange>::value>* = nullptr
 #endif
               )
 {
@@ -325,25 +319,14 @@ bool read_PLY(std::istream& is,
   std::vector<std::pair<unsigned int, unsigned int> > dummy_pui;
   std::vector<std::pair<float, float> > dummy_pf;
 
-  return IO::internal::read_PLY(is, points, polygons, std::back_inserter(dummy_pui),
-                                choose_parameter(get_parameter(np, internal_np::face_color_output_iterator),
-                                                 CGAL::Emptyset_iterator()),
-                                choose_parameter(get_parameter(np, internal_np::vertex_color_output_iterator),
-                                                 CGAL::Emptyset_iterator()),
-                                std::back_inserter(dummy_pf),
-                                choose_parameter(get_parameter(np, internal_np::verbose), true));
+  return internal::read_PLY(is, points, polygons, std::back_inserter(dummy_pui),
+                            choose_parameter(get_parameter(np, internal_np::face_color_output_iterator),
+                                             CGAL::Emptyset_iterator()),
+                            choose_parameter(get_parameter(np, internal_np::vertex_color_output_iterator),
+                                             CGAL::Emptyset_iterator()),
+                            std::back_inserter(dummy_pf),
+                            choose_parameter(get_parameter(np, internal_np::verbose), true));
 }
-
-/// \cond SKIP_IN_MANUAL
-
-template <class PointRange, class PolygonRange>
-bool read_PLY(std::istream& is, PointRange& points, PolygonRange& polygons,
-              typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr)
-{
-  return read_PLY(is, points, polygons, parameters::all_default());
-}
-
-/// \endcond
 
 /*!
  * \ingroup PkgStreamSupportIoFuncsPLY
@@ -366,7 +349,7 @@ bool read_PLY(std::istream& is, PointRange& points, PolygonRange& polygons,
  *
  * \cgalNamedParamsBegin
  *   \cgalParamNBegin{use_binary_mode}
- *     \cgalParamDescription{indicates whether data should be read in binary (`true`) or in ASCII (`false`)}
+ *     \cgalParamDescription{indicates whether data should be read in binary (`true`) or in \ascii (`false`)}
  *     \cgalParamType{Boolean}
  *     \cgalParamDefault{`true`}
  *   \cgalParamNEnd
@@ -380,13 +363,13 @@ bool read_PLY(std::istream& is, PointRange& points, PolygonRange& polygons,
  *
  * \returns `true` if the reading was successful, `false` otherwise.
  */
-template <typename PointRange, typename PolygonRange, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+template <typename PointRange, typename PolygonRange, typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_PLY(const std::string& fname,
               PointRange& points,
               PolygonRange& polygons,
-              const CGAL_BGL_NP_CLASS& np
+              const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-              , typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr
+              , std::enable_if_t<internal::is_Range<PolygonRange>::value>* = nullptr
 #endif
               )
 {
@@ -394,27 +377,16 @@ bool read_PLY(const std::string& fname,
   if(binary)
   {
     std::ifstream is(fname, std::ios::binary);
-    CGAL::set_mode(is, CGAL::IO::BINARY);
+    CGAL::IO::set_mode(is, CGAL::IO::BINARY);
     return read_PLY(is, points, polygons, np);
   }
   else
   {
     std::ifstream is(fname);
-    CGAL::set_mode(is, CGAL::IO::ASCII);
+    CGAL::IO::set_mode(is, CGAL::IO::ASCII);
     return read_PLY(is, points, polygons, np);
   }
 }
-
-/// \cond SKIP_IN_MANUAL
-
-template <typename PointRange, typename PolygonRange>
-bool read_PLY(const std::string& fname, PointRange& points, PolygonRange& polygons,
-              typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr)
-{
-  return read_PLY(fname, points, polygons, parameters::all_default());
-}
-
-/// \endcond
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -427,7 +399,9 @@ bool read_PLY(const std::string& fname, PointRange& points, PolygonRange& polygo
  *
  * \brief writes the content of `points` and `polygons` in `out`, using the \ref IOStreamPLY.
  *
- * \attention When writing a binary file, the flag `std::ios::binary` flag must be set during the creation of the `ofstream`.
+ * \attention To write to a binary file, the flag `std::ios::binary` must be set during the creation
+ *            of the `ofstream`, and the \link PkgStreamSupportEnumRef `IO::Mode` \endlink
+ *            of the stream must be set to `BINARY`.
  *
  * \tparam PointRange a model of the concept `RandomAccessContainer` whose value type is the point type
  * \tparam PolygonRange a model of the concept `SequenceContainer`
@@ -445,20 +419,20 @@ bool read_PLY(const std::string& fname, PointRange& points, PolygonRange& polygo
  *   \cgalParamNBegin{stream_precision}
  *     \cgalParamDescription{a parameter used to set the precision (i.e. how many digits are generated) of the output stream}
  *     \cgalParamType{int}
- *     \cgalParamDefault{`the precision of the stream `os``}
- *     \cgalParamExtra{This parameter is only meaningful while using ASCII encoding.}
+ *     \cgalParamDefault{the precision of the stream `os`}
+ *     \cgalParamExtra{This parameter is only meaningful while using \ascii encoding.}
  *   \cgalParamNEnd
  * \cgalNamedParamsEnd
  *
  * \return `true` if the writing was successful, `false` otherwise.
  */
-template <class PointRange, class PolygonRange, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS >
+template <class PointRange, class PolygonRange, typename CGAL_NP_TEMPLATE_PARAMETERS >
 bool write_PLY(std::ostream& out,
                const PointRange& points,
                const PolygonRange& polygons,
-               const CGAL_BGL_NP_CLASS& np
+               const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-               , typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr
+               , std::enable_if_t<internal::is_Range<PolygonRange>::value>* = nullptr
 #endif
                )
 {
@@ -472,41 +446,30 @@ bool write_PLY(std::ostream& out,
 
   // Write header
   out << "ply" << std::endl
-      << ((get_mode(out) == IO::BINARY) ? "format binary_little_endian 1.0" : "format ascii 1.0") << std::endl
+      << ((get_mode(out) == BINARY) ? "format binary_little_endian 1.0" : "format ascii 1.0") << std::endl
       << "comment Generated by the CGAL library" << std::endl
       << "element vertex " << points.size() << std::endl;
 
-  IO::internal::output_property_header(out, make_ply_point_writer(CGAL::Identity_property_map<Point_3>()));
+  internal::output_property_header(out, make_ply_point_writer(CGAL::Identity_property_map<Point_3>()));
 
   out << "element face " << polygons.size() << std::endl;
 
-  IO::internal::output_property_header(out, std::make_pair(CGAL::Identity_property_map<Polygon_3>(),
-                                                            PLY_property<std::vector<int> >("vertex_indices")));
+  internal::output_property_header(out, std::make_pair(CGAL::Identity_property_map<Polygon_3>(),
+                                                       PLY_property<std::vector<int> >("vertex_indices")));
 
   out << "end_header" << std::endl;
 
   for(std::size_t i=0; i<points.size(); ++i)
-    IO::internal::output_properties(out, points.begin() + i,
-                                    make_ply_point_writer(CGAL::Identity_property_map<Point_3>()));
+    internal::output_properties(out, points.begin() + i,
+                                make_ply_point_writer(CGAL::Identity_property_map<Point_3>()));
 
   for(std::size_t i=0; i<polygons.size(); ++i)
-    IO::internal::output_properties(out, polygons.begin() + i,
-                                    std::make_pair(CGAL::Identity_property_map<Polygon_3>(),
-                                                   PLY_property<std::vector<int> >("vertex_indices")));
+    internal::output_properties(out, polygons.begin() + i,
+                                std::make_pair(CGAL::Identity_property_map<Polygon_3>(),
+                                               PLY_property<std::vector<int> >("vertex_indices")));
 
   return out.good();
 }
-
-/// \cond SKIP_IN_MANUAL
-
-template <class PointRange, class PolygonRange>
-bool write_PLY(std::ostream& out, const PointRange& points, const PolygonRange& polygons,
-               typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr)
-{
-  return write_PLY(out, points, polygons, parameters::all_default());
-}
-
-/// \endcond
 
 /*!
  * \ingroup PkgStreamSupportIoFuncsPLY
@@ -527,7 +490,7 @@ bool write_PLY(std::ostream& out, const PointRange& points, const PolygonRange& 
  *
  * \cgalNamedParamsBegin
  *   \cgalParamNBegin{use_binary_mode}
- *     \cgalParamDescription{indicates whether data should be written in binary (`true`) or in ASCII (`false`)}
+ *     \cgalParamDescription{indicates whether data should be written in binary (`true`) or in \ascii (`false`)}
  *     \cgalParamType{Boolean}
  *     \cgalParamDefault{`true`}
  *   \cgalParamNEnd
@@ -536,19 +499,19 @@ bool write_PLY(std::ostream& out, const PointRange& points, const PolygonRange& 
  *     \cgalParamDescription{a parameter used to set the precision (i.e. how many digits are generated) of the output stream}
  *     \cgalParamType{int}
  *     \cgalParamDefault{`6`}
- *     \cgalParamExtra{This parameter is only meaningful while using ASCII encoding.}
+ *     \cgalParamExtra{This parameter is only meaningful while using \ascii encoding.}
  *   \cgalParamNEnd
  * \cgalNamedParamsEnd
  *
  * \return `true` if the writing was successful, `false` otherwise.
  */
-template <class PointRange, class PolygonRange, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS >
+template <class PointRange, class PolygonRange, typename CGAL_NP_TEMPLATE_PARAMETERS >
 bool write_PLY(const std::string& fname,
                const PointRange& points,
                const PolygonRange& polygons,
-               const CGAL_BGL_NP_CLASS& np
+               const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-               , typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr
+               , std::enable_if_t<internal::is_Range<PolygonRange>::value>* = nullptr
 #endif
                )
 {
@@ -556,27 +519,18 @@ bool write_PLY(const std::string& fname,
   if(binary)
   {
     std::ofstream os(fname, std::ios::binary);
-    CGAL::set_mode(os, CGAL::IO::BINARY);
+    CGAL::IO::set_mode(os, CGAL::IO::BINARY);
     return write_PLY(os, points, polygons, np);
   }
   else
   {
     std::ofstream os(fname);
-    CGAL::set_mode(os, CGAL::IO::ASCII);
+    CGAL::IO::set_mode(os, CGAL::IO::ASCII);
     return write_PLY(os, points, polygons, np);
   }
 }
 
-/// \cond SKIP_IN_MANUAL
-
-template <class PointRange, class PolygonRange>
-bool write_PLY(const std::string& fname, const PointRange& points, const PolygonRange& polygons,
-               typename boost::enable_if<IO::internal::is_Range<PolygonRange> >::type* = nullptr)
-{
-  return write_PLY(fname, points, polygons, parameters::all_default());
-}
-
-/// \endcond
+} // namespace IO
 
 } // namespace CGAL
 

@@ -22,7 +22,7 @@
 #include <CGAL/Has_conversion.h>
 #include <CGAL/Spherical_kernel_3.h>
 #include <CGAL/squared_distance_3.h>
-#include <CGAL/triangulation_assertions.h>
+#include <CGAL/assertions.h>
 
 #include <CGAL/enum.h>
 
@@ -101,14 +101,14 @@ public:
     // Check if r is on the same side of the plane orthogonal to the plane (c,p,q)
     // and going through c and p as q
     const Orientation op = _lk.coplanar_orientation_3_object()(_center, p, q, r);
-    CGAL_triangulation_assertion(op != COLLINEAR);
+    CGAL_assertion(op != COLLINEAR);
     if(op == NEGATIVE)
       return false;
 
     // Check if r is on the same side of the plane orthogonal to the plane (c,p,q)
     // and going through c and q as p
     const Orientation oq = _lk.coplanar_orientation_3_object()(_center, q, p, r);
-    CGAL_triangulation_assertion(oq != COLLINEAR);
+    CGAL_assertion(oq != COLLINEAR);
     if(oq == NEGATIVE)
       return false;
 
@@ -303,6 +303,17 @@ public:
     : LK(k), SK(sk), _center(center), _radius(radius)
   {
     initialize_bounds();
+  }
+
+  friend void swap(Self& l, Self& r)
+  {
+    using std::swap;
+    swap(static_cast<LK&>(l), static_cast<LK&>(r));
+    swap(static_cast<SK&>(l), static_cast<SK&>(r));
+    swap(l._center, r._center);
+    swap(l._radius, r._radius);
+    l.initialize_bounds();
+    r.initialize_bounds();
   }
 
 public:

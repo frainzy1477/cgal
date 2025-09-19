@@ -20,7 +20,6 @@
 #include <CGAL/Origin.h>
 #include <CGAL/representation_tags.h>
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/Bbox_3.h>
 #include <CGAL/Dimension.h>
@@ -35,7 +34,7 @@ class Weighted_point_3 : public R_::Kernel_base::Weighted_point_3
   typedef typename R_::FT                    FT;
 
   typedef Weighted_point_3                            Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Weighted_point_3>::value));
+  static_assert(std::is_same<Self, typename R_::Weighted_point_3>::value);
 
 public:
 
@@ -70,6 +69,9 @@ public:
 
   Weighted_point_3(const Rep& p)
       : Rep(p) {}
+
+  Weighted_point_3(Rep&& p)
+      : Rep(std::move(p)) {}
 
   explicit
   Weighted_point_3(const Point_3& p)
@@ -191,67 +193,11 @@ public:
 
 };
 
-template <class R>
-inline
-bool
-operator==(const Origin& o, const Weighted_point_3<R>& p)
-{ return p == o; }
-
-template <class R>
-inline
-bool
-operator!=(const Origin& o, const Weighted_point_3<R>& p)
-{ return p != o; }
-
-template <class R>
-inline
-bool
-operator==(const Point_3<R>& bp, const Weighted_point_3<R>& p)
-{ return bp == p.point(); }
-
-template <class R>
-inline
-bool
-operator!=(const Point_3<R>& bp, const Weighted_point_3<R>& p)
-{ return bp != p.point(); }
-
-template <class R>
-inline
-bool
-operator==(const Weighted_point_3<R>& p, const Point_3<R>& bp)
-{ return bp == p.point(); }
-
-template <class R>
-inline
-bool
-operator!=(const Weighted_point_3<R>& p, const Point_3<R>& bp)
-{ return bp != p.point(); }
-
-template <class R>
-inline
-bool
-operator==(const Weighted_point_3<R>& p, const Weighted_point_3<R>& p2)
-{ return p.point() == p2.point(); }
-
-template <class R>
-inline
-bool
-operator!=(const Weighted_point_3<R>& p, const Weighted_point_3<R>& p2)
-{ return p.point() != p2.point(); }
-
-
-template <class R>
-inline
-bool
-operator<(const Weighted_point_3<R>& p, const Weighted_point_3<R>& q)
-{ return p.point() < q.point(); }
-
-
 template <class R >
 std::ostream&
 insert(std::ostream& os, const Weighted_point_3<R>& p,const Cartesian_tag&)
 {
-    switch(get_mode(os)) {
+    switch(IO::get_mode(os)) {
     case IO::ASCII :
         return os << p.point() << ' ' << p.weight();
     case IO::BINARY :
@@ -270,7 +216,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Weighted_point_3<R>& p,const Homogeneous_tag&)
 {
-  switch(get_mode(os))
+  switch(IO::get_mode(os))
   {
     case IO::ASCII :
         return os << p.hx() << ' ' << p.hy() << ' ' << p.hz() << ' ' << p.hw() << ' ' << p.weight();
@@ -303,9 +249,9 @@ std::istream&
 extract(std::istream& is, Weighted_point_3<R>& p, const Cartesian_tag&)
 {
   typename R::FT x, y, z, weight;
-    switch(get_mode(is)) {
+    switch(IO::get_mode(is)) {
     case IO::ASCII :
-      is >> iformat(x) >> iformat(y) >> iformat(z) >> iformat(weight);
+      is >> IO::iformat(x) >> IO::iformat(y) >> IO::iformat(z) >> IO::iformat(weight);
         break;
     case IO::BINARY :
         read(is, x);
@@ -315,7 +261,7 @@ extract(std::istream& is, Weighted_point_3<R>& p, const Cartesian_tag&)
         break;
     default:
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
     }
     if (is)
@@ -330,7 +276,7 @@ extract(std::istream& is, Weighted_point_3<R>& p, const Homogeneous_tag&)
 {
   typename R::RT hx, hy, hz, hw;
   typename R::FT weight;
-  switch(get_mode(is))
+  switch(IO::get_mode(is))
   {
     case IO::ASCII :
       is >> hx >> hy >> hz >> hw >> weight;
@@ -344,7 +290,7 @@ extract(std::istream& is, Weighted_point_3<R>& p, const Homogeneous_tag&)
         break;
     default:
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
   }
   if (is)

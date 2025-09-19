@@ -38,7 +38,7 @@ respectively.
 
 \tparam SLDS is an optional parameter to specify the type of the spatial lock data structure.
         It must be a model of the `SurjectiveLockDataStructure` concept,
-        with `Object` being a `Point`.
+        with `object` being a `Point`.
         It is only used if the triangulation data structure used is concurrency-safe (i.e.\ when
         `TDS::Concurrency_tag` is `Parallel_tag`).
         The default value is `Spatial_lock_grid_3<Tag_priority_blocking>` if
@@ -195,7 +195,7 @@ Given a pair `(p,i)`, the vertex `v` storing `p` also stores `i`, that is
 `v.point() == p` and `v.info() == i`. If several pairs have the same point,
 only one vertex is created, one of the objects of type `Vertex::Info` will be stored in the vertex.
 \pre `Vertex` must be model of the concept `TriangulationVertexBaseWithInfo_3`.
-\tparam (WeightedPointWithInfoInputIterator must be an input iterator with value type  `std::pair<Weighted_point,Vertex::Info>`.
+\tparam WeightedPointWithInfoInputIterator must be an input iterator with value type  `std::pair<Weighted_point,Vertex::Info>`.
 */
 template < class WeightedPointWithInfoInputIterator >
 std::ptrdiff_t

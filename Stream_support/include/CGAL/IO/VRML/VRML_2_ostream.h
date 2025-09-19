@@ -30,7 +30,7 @@ class VRML_2_ostream
 public:
   VRML_2_ostream() : m_os(nullptr) {}
   VRML_2_ostream(std::ostream& o) : m_os(&o) { header(); }
-  ~VRML_2_ostream() CGAL_NOEXCEPT(CGAL_NO_ASSERTIONS_BOOL)
+  ~VRML_2_ostream() noexcept(!CGAL_ASSERTIONS_ENABLED)
   {
     CGAL_destructor_assertion_catch(
       close();
@@ -55,9 +55,9 @@ public:
 
   std::ostream& os() const
   {
-    // The behaviour if m_os == nullptr could be changed to return
+    // The behavior if m_os == nullptr could be changed to return
     // cerr or a file handle to /dev/null. The latter one would
-    // mimick the behaviour that one can still use a stream with
+    // mimic the behavior that one can still use a stream with
     // an invalid stream, but without producing any output.
     CGAL_assertion( m_os != nullptr );
     return *m_os;

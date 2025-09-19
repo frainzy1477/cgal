@@ -21,7 +21,7 @@
 
 namespace CGAL {
 
-/// \ingroup PkgSolverInterfaceRef
+/// \ingroup PkgSolverInterfaceLS
 ///
 /// The class `Default_diagonalize_traits` is a wrapper designed to automatically
 /// use `Eigen_diagonalize_traits` if Eigen is available and otherwise use
@@ -30,7 +30,7 @@ namespace CGAL {
 /// \tparam FT Number type
 /// \tparam dim Dimension of the matrices and vectors
 ///
-/// \cgalModels `DiagonalizeTraits`
+/// \cgalModels{DiagonalizeTraits}
 template <typename FT, unsigned int dim = 3>
 class Default_diagonalize_traits
 {

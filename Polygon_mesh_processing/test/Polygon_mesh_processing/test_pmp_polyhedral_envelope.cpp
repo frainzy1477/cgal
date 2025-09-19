@@ -1,10 +1,12 @@
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Surface_mesh.h>
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
 #include <CGAL/Polyhedral_envelope.h>
 #include <CGAL/Polygon_mesh_processing/repair_self_intersections.h>
+#include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
+
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/Polyhedron_3.h>
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
@@ -16,8 +18,8 @@ void test_API()
   std::cout << "---- test_API() ----\n";
   std::vector<EPIC::Point_3> points;
   std::vector<std::array<int, 3> > triangles;
-  std::ifstream in("data/eight.off");
-  CGAL::read_OFF(in, points, triangles);
+  std::ifstream in(CGAL::data_file_path("meshes/eight.off"));
+  CGAL::IO::read_OFF(in, points, triangles);
   CGAL::Surface_mesh<EPIC::Point_3> sm;
   CGAL::Polyhedron_3<EPIC> poly;
   PMP::polygon_soup_to_polygon_mesh(points, triangles, sm);
@@ -99,7 +101,7 @@ void test_remove_si()
 {
   std::cout << "---- test_remove_si() ----\n";
   CGAL::Surface_mesh<EPIC::Point_3> tm;
-  std::ifstream in("data/pig.off");
+  std::ifstream in(CGAL::data_file_path("meshes/pig.off"));
   in >> tm;
   assert(tm.vertices().size()!=0);
 

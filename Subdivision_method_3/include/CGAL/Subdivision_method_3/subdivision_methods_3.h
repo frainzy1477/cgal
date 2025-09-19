@@ -17,7 +17,7 @@
 
 #include <CGAL/circulator.h>
 
-#include <CGAL/boost/graph/Named_function_parameters.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 
 #include <CGAL/Subdivision_method_3/subdivision_hosts_3.h>
@@ -74,10 +74,9 @@ Catmull-Clark subdivision.
 \sa `CGAL::DooSabin_mask_3<PolygonMesh`
 \sa `CGAL::Loop_mask_3<PolygonMesh`
 \sa `CGAL::Sqrt3_mask_3<PolygonMesh>`
+\sa `CGAL::Linear_mask_3<PolygonMesh>`
 */
 /// @{
-
-namespace parameters = CGAL::parameters;
 
 // -----------------------------------------------------------------------------
 
@@ -119,12 +118,18 @@ void CatmullClark_subdivision(PolygonMesh& pmesh, int step) {
  *     \cgalParamType{unsigned int}
  *     \cgalParamDefault{`1`}
  *   \cgalParamNEnd
+ *   \cgalParamNBegin{do_not_modify_geometry}
+ *     \cgalParamDescription{if set to `true`, the geometry of the mesh will not be modified}
+ *     \cgalParamType{Boolean}
+ *     \cgalParamDefault{`false`}
+ *     \cgalParamExtra{If `pmesh` is in fact a triangle mesh, this named parameter is also available
+ *                     in Loop subdivision and will create better shaped elements.}
+ *   \cgalParamNEnd
  * \cgalNamedParamsEnd
  *
- * \pre `pmesh` must be a triangle mesh.
  **/
-template <class PolygonMesh, class NamedParameters>
-void CatmullClark_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
+template <class PolygonMesh, class NamedParameters = parameters::Default_named_parameters>
+void CatmullClark_subdivision(PolygonMesh& pmesh, const NamedParameters& np = parameters::default_values()) {
   using parameters::choose_parameter;
   using parameters::get_parameter;
 
@@ -133,16 +138,17 @@ void CatmullClark_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
                          get_property_map(CGAL::vertex_point, pmesh));
 
   unsigned int step = choose_parameter(get_parameter(np, internal_np::number_of_iterations), 1);
-  CatmullClark_mask_3<PolygonMesh,Vpm> mask(&pmesh, vpm);
+  bool do_not_modify_geometry = choose_parameter(get_parameter(np, internal_np::do_not_modify_geometry), false);
 
-  for(unsigned int i = 0; i < step; i++)
-    internal::PQQ_1step(pmesh, vpm, mask);
-}
-
-template <class PolygonMesh>
-void CatmullClark_subdivision(PolygonMesh& pmesh)
-{
-  CatmullClark_subdivision(pmesh, CGAL::parameters::all_default());
+  if (do_not_modify_geometry) {
+    Linear_mask_3<PolygonMesh, Vpm> mask(&pmesh, vpm);
+    for (unsigned int i = 0; i < step; i++)
+      internal::PQQ_1step(pmesh, vpm, mask);
+  } else {
+    CatmullClark_mask_3<PolygonMesh, Vpm> mask(&pmesh, vpm);
+    for (unsigned int i = 0; i < step; i++)
+      internal::PQQ_1step(pmesh, vpm, mask);
+  }
 }
 // -----------------------------------------------------------------------------
 
@@ -184,10 +190,19 @@ void Loop_subdivision(PolygonMesh& pmesh, int step) {
  *     \cgalParamType{unsigned int}
  *     \cgalParamDefault{`1`}
  *   \cgalParamNEnd
+ *   \cgalParamNBegin{do_not_modify_geometry}
+ *     \cgalParamDescription{if set to `true`, the geometry of the mesh will not be modified}
+ *     \cgalParamType{Boolean}
+ *     \cgalParamDefault{`false`}
+ *     \cgalParamExtra{This named parameter is also available in Catmull-Clark subdivision
+ *                     for non-triangle meshes.}
+ *   \cgalParamNEnd
  * \cgalNamedParamsEnd
+ *
+ * \pre `pmesh` must be a triangle mesh.
  **/
-template <class PolygonMesh, class NamedParameters>
-void Loop_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
+template <class PolygonMesh, class NamedParameters = parameters::Default_named_parameters>
+void Loop_subdivision(PolygonMesh& pmesh, const NamedParameters& np = parameters::default_values()) {
   using parameters::choose_parameter;
   using parameters::get_parameter;
 
@@ -196,17 +211,19 @@ void Loop_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
                          get_property_map(CGAL::vertex_point, pmesh));
 
   unsigned int step = choose_parameter(get_parameter(np, internal_np::number_of_iterations), 1);
-  Loop_mask_3<PolygonMesh,Vpm> mask(&pmesh, vpm);
+  bool do_not_modify_geometry = choose_parameter(get_parameter(np, internal_np::do_not_modify_geometry), false);
 
-  for(unsigned int i = 0; i < step; i++)
-    internal::PTQ_1step(pmesh, vpm, mask);
+  if (do_not_modify_geometry) {
+    Linear_mask_3<PolygonMesh, Vpm> mask(&pmesh, vpm);
+    for (unsigned int i = 0; i < step; i++)
+      internal::PTQ_1step(pmesh, vpm, mask);
+  } else {
+    Loop_mask_3<PolygonMesh, Vpm> mask(&pmesh, vpm);
+    for (unsigned int i = 0; i < step; i++)
+      internal::PTQ_1step(pmesh, vpm, mask);
+  }
 }
 
-template <class PolygonMesh>
-void Loop_subdivision(PolygonMesh& pmesh)
-{
-  Loop_subdivision(pmesh, CGAL::parameters::all_default());
-}
 // -----------------------------------------------------------------------------
 
 #ifndef DOXYGEN_RUNNING
@@ -249,8 +266,8 @@ void DooSabin_subdivision(PolygonMesh& pmesh, int step) {
  *   \cgalParamNEnd
  * \cgalNamedParamsEnd
  **/
-template <class PolygonMesh, class NamedParameters>
-void DooSabin_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
+template <class PolygonMesh, class NamedParameters = parameters::Default_named_parameters>
+void DooSabin_subdivision(PolygonMesh& pmesh, const NamedParameters& np = parameters::default_values()) {
   using parameters::choose_parameter;
   using parameters::get_parameter;
 
@@ -263,12 +280,6 @@ void DooSabin_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
 
   for(unsigned int i = 0; i < step; i++)
     internal::DQQ_1step(pmesh, vpm, mask);
-}
-
-template <class PolygonMesh>
-void DooSabin_subdivision(PolygonMesh& pmesh)
-{
-  DooSabin_subdivision(pmesh, CGAL::parameters::all_default());
 }
 // -----------------------------------------------------------------------------
 
@@ -317,8 +328,8 @@ void Sqrt3_subdivision(PolygonMesh& pmesh, int step) {
  *
  * \pre `pmesh` must be a triangle mesh.
  **/
-template <class PolygonMesh, class NamedParameters>
-void Sqrt3_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
+template <class PolygonMesh, class NamedParameters = parameters::Default_named_parameters>
+void Sqrt3_subdivision(PolygonMesh& pmesh, const NamedParameters& np = parameters::default_values()) {
   using parameters::choose_parameter;
   using parameters::get_parameter;
 
@@ -331,12 +342,6 @@ void Sqrt3_subdivision(PolygonMesh& pmesh, const NamedParameters& np) {
 
   for(unsigned int i = 0; i < step; i++)
     internal::Sqrt3_1step(pmesh, vpm, mask, (i%2==1));
-}
-
-template <class PolygonMesh>
-void Sqrt3_subdivision(PolygonMesh& pmesh)
-{
-  Sqrt3_subdivision(pmesh, CGAL::parameters::all_default());
 }
 /// @}
 

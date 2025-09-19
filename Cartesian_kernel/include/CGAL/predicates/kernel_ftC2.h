@@ -421,6 +421,7 @@ typename Same_uncertainty_nt<Angle, FT>::type
 angleC2(const FT &ux, const FT &uy,
         const FT &vx, const FT &vy)
 {
+  typedef typename Same_uncertainty_nt<Angle, FT>::type Angle;
   return enum_cast<Angle>(CGAL_NTS sign(ux*vx + uy*vy));
 }
 
@@ -431,6 +432,7 @@ angleC2(const FT &px, const FT &py,
         const FT &qx, const FT &qy,
         const FT &rx, const FT &ry)
 {
+  typedef typename Same_uncertainty_nt<Angle, FT>::type Angle;
   return enum_cast<Angle>(CGAL_NTS sign((px-qx)*(rx-qx)+(py-qy)*(ry-qy)));
 }
 
@@ -442,6 +444,7 @@ angleC2(const FT &px, const FT &py,
         const FT &rx, const FT &ry,
         const FT &sx, const FT &sy)
 {
+  typedef typename Same_uncertainty_nt<Angle, FT>::type Angle;
   return enum_cast<Angle>(CGAL_NTS sign((px-qx)*(rx-sx)+(py-qy)*(ry-sy)));
 }
 
@@ -508,6 +511,7 @@ side_of_bounded_circleC2(const FT &px, const FT &py,
                          const FT &rx, const FT &ry,
                          const FT &tx, const FT &ty)
 {
+  typedef typename Same_uncertainty_nt<Bounded_side, FT>::type Bounded_side;
   return enum_cast<Bounded_side>( side_of_oriented_circleC2(px,py,qx,qy,rx,ry,tx,ty)
                                  * orientationC2(px,py,qx,qy,rx,ry) );
 }
@@ -520,8 +524,8 @@ side_of_bounded_circleC2(const FT &px, const FT &py,
                          const FT &tx, const FT &ty)
 {
   // Returns whether T lies inside or outside the circle which diameter is PQ.
-  return enum_cast<Bounded_side>(
-                      CGAL_NTS compare((tx-px)*(qx-tx), (ty-py)*(ty-qy)) );
+  typedef typename Same_uncertainty_nt<Bounded_side, FT>::type Bounded_side;
+  return enum_cast<Bounded_side>(CGAL_NTS compare((tx-px)*(qx-tx), (ty-py)*(ty-qy)) );
 }
 
 template < class FT >
@@ -630,7 +634,7 @@ side_of_oriented_lineC2(const FT &a, const FT &b, const FT &c,
 }
 
 template <class FT>
-Comparison_result
+typename Compare<FT>::result_type
 compare_power_distanceC2(const FT& px, const FT& py, const FT& pwt,
                          const FT& qx, const FT& qy, const FT& qwt,
                          const FT& rx, const FT& ry)
@@ -643,24 +647,25 @@ compare_power_distanceC2(const FT& px, const FT& py, const FT& pwt,
 
 template <class FT>
 CGAL_KERNEL_MEDIUM_INLINE
-Bounded_side
+typename Same_uncertainty_nt<Bounded_side, FT>::type
 power_side_of_bounded_power_circleC2(const FT &px, const FT &py, const FT &pw,
                                      const FT &qx, const FT &qy, const FT &qw,
                                      const FT &tx, const FT &ty, const FT &tw)
 {
+  typedef typename Same_uncertainty_nt<Bounded_side, FT>::type Bounded_side;
+
   FT dpx = px - qx;
   FT dpy = py - qy;
   FT dtx = tx - qx;
   FT dty = ty - qy;
   FT dpz = CGAL_NTS square(dpx) + CGAL_NTS square(dpy);
 
-  return enum_cast<Bounded_side>
-    (CGAL_NTS sign(-(CGAL_NTS square(dtx) + CGAL_NTS square(dty)-tw+qw)*dpz
+  return enum_cast<Bounded_side>(CGAL_NTS sign(-(CGAL_NTS square(dtx) + CGAL_NTS square(dty)-tw+qw)*dpz
                    +(dpz-pw+qw)*(dpx*dtx+dpy*dty)));
 }
 
 template <class FT>
-Oriented_side
+typename Same_uncertainty_nt<Oriented_side, FT>::type
 power_side_of_oriented_power_circleC2(const FT &px, const FT &py, const FT &pwt,
                                       const FT &qx, const FT &qy, const FT &qwt,
                                       const FT &rx, const FT &ry, const FT &rwt,
@@ -685,7 +690,7 @@ power_side_of_oriented_power_circleC2(const FT &px, const FT &py, const FT &pwt,
 }
 
 template <class FT>
-Oriented_side
+typename Same_uncertainty_nt<Oriented_side, FT>::type
 power_side_of_oriented_power_circleC2(const FT &px, const FT &py, const FT &pwt,
                                       const FT &qx, const FT &qy, const FT &qwt,
                                       const FT &tx, const FT &ty, const FT &twt)
@@ -706,6 +711,28 @@ power_side_of_oriented_power_circleC2(const FT &px, const FT &py, const FT &pwt,
   // If not possible, then on the (y) axis.
   Comparison_result cmpy = CGAL_NTS compare(py, qy);
   return cmpy * sign_of_determinant(dpy, dpz, dqy, dqz);
+}
+
+template <class FT>
+typename Same_uncertainty_nt<Oriented_side, FT>::type
+circumcenter_oriented_side_of_oriented_segmentC2(const FT& ax,  const FT& ay,
+                                                 const FT& bx,  const FT& by,
+                                                 const FT& p0x, const FT& p0y,
+                                                 const FT& p1x, const FT& p1y,
+                                                 const FT& p2x, const FT& p2y)
+{
+  const FT dX = bx - ax;
+  const FT dY = by - ay;
+  const FT R0 = p0x * p0x + p0y * p0y;
+  const FT R1 = p1x * p1x + p1y * p1y;
+  const FT R2 = p2x * p2x + p2y * p2y;
+  const FT denominator = (p1x - p0x) * (p2y - p0y) +
+                         (p0x - p2x) * (p1y - p0y);
+  const FT det = 2 * denominator * (ax * dY - ay * dX)
+                   - (R2 - R1) * (p0x * dX + p0y * dY)
+                   - (R0 - R2) * (p1x * dX + p1y * dY)
+                   - (R1 - R0) * (p2x * dX + p2y * dY);
+  return CGAL::sign(det);
 }
 
 } //namespace CGAL

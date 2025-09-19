@@ -18,7 +18,7 @@
 
 #include <CGAL/TDS_full_cell_default_storage_policy.h>
 #include <CGAL/TDS_full_cell_mirror_storage_policy.h>
-#include <CGAL/internal/Triangulation/Dummy_TDS.h>
+#include <CGAL/Triangulation/internal/Dummy_TDS.h>
 #include <CGAL/Dimension.h>
 #include <CGAL/Default.h>
 #include <CGAL/array.h>
@@ -249,7 +249,9 @@ private:
     const Vertex_handle_array & vertices() const {return combinatorics_.vertices_; }
 
     // DATA MEMBERS
-    Combinatorics       combinatorics_;
+    // With the Itanium ABI, [[no_unique_address]] allows tda_data_ to reuse the
+    // padding bytes at the end of combinatorics_ when using the mirror policy.
+    CGAL_NO_UNIQUE_ADDRESS Combinatorics combinatorics_;
     mutable TDS_data    tds_data_;
 };
 
@@ -259,7 +261,7 @@ template < typename TDS, typename SSP >
 std::ostream &
 operator<<(std::ostream & O, const Triangulation_ds_full_cell<TDS,SSP> &) /* Concept */
 {
-    /*if( is_ascii(O) )
+    /*if( IO::is_ascii(O) )
     {
         // os << '\n';
     }
@@ -271,7 +273,7 @@ template < typename TDS, typename SSP >
 std::istream &
 operator>>(std::istream & I, Triangulation_ds_full_cell<TDS,SSP> &) /* Concept */
 {
-    /*if( is_ascii(I) )
+    /*if( IO::is_ascii(I) )
     {}
     else {}*/
     return I;

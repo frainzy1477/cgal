@@ -21,8 +21,7 @@
 #include <CGAL/circulator.h>
 #include <CGAL/tags.h>
 
-#include <boost/unordered_map.hpp>
-
+#include <unordered_map>
 #include <iterator>
 #include <list>
 #include <vector>
@@ -80,8 +79,9 @@ void PQQ_1step(Poly& p, VertexPointMap vpm, Mask mask) {
   Point* face_point_buffer = edge_point_buffer + num_e;
 
   int i=0;
-  boost::unordered_map<vertex_descriptor,int> v_index;
+  std::unordered_map<vertex_descriptor,int> v_index;
   for(vertex_descriptor vh : p_vertices){
+    vertex_point_buffer[i] = get(vpm, vh);
     v_index[vh]= i++;
   }
 
@@ -200,7 +200,7 @@ void PTQ_1step(Poly& p, VertexPointMap vpm, Mask mask) {
   Point* edge_point_buffer = vertex_point_buffer + num_v;
 
   int i=0;
-  boost::unordered_map<vertex_descriptor,int> v_index;
+  std::unordered_map<vertex_descriptor,int> v_index;
   for(vertex_descriptor vh : p_vertices){
     v_index[vh]= i++;
   }
@@ -398,7 +398,7 @@ void DQQ_1step(Poly& p, VertexPointMap vpm, Mask mask) {
 template <class Poly, class VertexPointMap, class Mask>
 void Sqrt3_1step(Poly& p, VertexPointMap vpm, Mask mask,
                  const bool refine_border = false) {
-  // `refine_border` is a boolean that is meant to be true only every SECOND step
+  // `refine_border` is a Boolean that is meant to be true only every SECOND step
   // of the subdivision. In particular, this function makes uses of the fact
   // that there is at most a single border edge in a face, which is true if
   // the mesh is obtained from a sqrt3 subdivision before, but might otherwise

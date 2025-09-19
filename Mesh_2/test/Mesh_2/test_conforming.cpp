@@ -38,7 +38,7 @@ struct Tester {
 
     std::cout << "Reading fish.poly...\n";
     std::ifstream poly_file("fish.poly");
-    CGAL::read_triangle_poly_file(cdt, poly_file);
+    CGAL::IO::read_triangle_poly_file(cdt, poly_file);
 
     const size_type number_of_vertices_poly = cdt.number_of_vertices();
     const size_type number_of_constrained_edges_poly =
@@ -52,7 +52,7 @@ struct Tester {
 
     std::cout << "Reading fish.edg...\n";
 
-    std::ifstream edg_file("fish.edg");
+    std::ifstream edg_file(CGAL::data_file_path("2d_segments/fish.edg"));
 
     cdt.clear();
 

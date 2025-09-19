@@ -79,7 +79,7 @@ int main(int, char**)
   assert(tr.geom_traits().radius() == 1);
 
   tr.insert(points.begin(), points.end());
-  write_OFF("test_dtos.off", tr);
+  CGAL::IO::write_OFF("test_dtos.off", tr);
   assert(tr.is_valid());
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,6 +97,12 @@ int main(int, char**)
   Tr::Solid_face_handles sfs = tr.solid_faces();
   assert(sfs.size() == 4);
   assert(tr.number_of_solid_faces() + tr.number_of_ghost_faces() == tr.number_of_faces());
+
+  Tr::Face_handle fh = *tr.solid_faces().begin();
+  for(auto f: tr.solid_faces()) {
+    assert(f == fh);
+    break;
+  }
 
   Tr::Points pts = tr.points();
   assert(pts.size() == tr.number_of_vertices() && pts.size() == 5);

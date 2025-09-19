@@ -67,7 +67,7 @@ typedef CGAL::Variational_shape_approximation<
 int main()
 {
   Mesh mesh;
-  std::ifstream input("./data/sphere.off");
+  std::ifstream input(CGAL::data_file_path("meshes/sphere.off"));
   if (!input || !(input >> mesh) || !CGAL::is_triangle_mesh(mesh)) {
     std::cerr << "Invalid input file." << std::endl;
     return EXIT_FAILURE;
@@ -82,7 +82,7 @@ int main()
     faces(mesh),
     target_edge_length,
     mesh,
-    PMP::parameters::number_of_iterations(nb_iter));
+    CGAL::parameters::number_of_iterations(nb_iter));
   std::cout << "Remeshing done. ("
     << std::distance(faces(mesh).first, faces(mesh).second) << " faces)..." << std::endl;
 
@@ -102,7 +102,7 @@ int main()
   }
 
   // create compact metric approximation algorithm instance
-  std::cout << "create compact vas instance" << std::endl;
+  std::cout << "create compact vsa instance" << std::endl;
   Compact_metric_point_proxy error_metric(center_pmap, area_pmap);
 
   Compact_approx approx(mesh, vpmap, error_metric);

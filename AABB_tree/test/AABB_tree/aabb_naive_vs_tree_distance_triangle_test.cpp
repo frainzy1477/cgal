@@ -27,7 +27,7 @@
 #include <CGAL/Polyhedron_3.h>
 
 #include <CGAL/AABB_tree.h>
-#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_traits_3.h>
 
 #include "AABB_test_util.h"
 
@@ -48,10 +48,10 @@ int main(void)
   std::cout << "AABB naive vs tree distance (triangle primitive) tests" << std::endl;
 
   const double duration = 0.1;
-  test_kernels<TRIANGLE>("./data/cube.off",duration);
-  test_kernels<TRIANGLE>("./data/coverrear.off",duration);
-  test_kernels<TRIANGLE>("./data/finger.off",duration);
-  test_kernels<TRIANGLE>("./data/pinion.off",duration);
+  test_kernels<TRIANGLE>("data/cube.off",duration);
+  test_kernels<TRIANGLE>("data/coverrear.off",duration);
+  test_kernels<TRIANGLE>("data/finger.off",duration);
+  test_kernels<TRIANGLE>(CGAL::data_file_path("meshes/pinion_small.off"),duration);
 
   return EXIT_SUCCESS;
 }

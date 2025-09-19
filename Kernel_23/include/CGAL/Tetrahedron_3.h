@@ -18,21 +18,26 @@
 #define CGAL_TETRAHEDRON_3_H
 
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/Bbox_3.h>
 #include <CGAL/Dimension.h>
+
+#include <type_traits>
 
 namespace CGAL {
 
 template <class R_>
 class Tetrahedron_3 : public R_::Kernel_base::Tetrahedron_3
 {
-  typedef typename R_::Point_3             Point_3;
+  typedef typename R_::Boolean               Boolean;
+  typedef typename R_::Bounded_side          Bounded_side;
+  typedef typename R_::Orientation           Orientation;
+  typedef typename R_::Oriented_side         Oriented_side;
+  typedef typename R_::Point_3               Point_3;
   typedef typename R_::Aff_transformation_3  Aff_transformation_3;
 
   typedef Tetrahedron_3                      Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Tetrahedron_3>::value));
+  static_assert(std::is_same<Self, typename R_::Tetrahedron_3>::value);
 
 public:
 
@@ -58,6 +63,9 @@ public:
   Tetrahedron_3(const Rep& t)
       : Rep(t) {}
 
+  Tetrahedron_3(Rep&& t)
+      : Rep(std::move(t)) {}
+
   Tetrahedron_3(const Point_3& p, const Point_3& q,
                 const Point_3& r, const Point_3& s)
     : Rep(typename R::Construct_tetrahedron_3()(Return_base_tag(), p, q, r, s)) {}
@@ -82,8 +90,7 @@ public:
     return vertex(i);
   }
 
-  bool
-  is_degenerate() const
+  Boolean is_degenerate() const
   {
     return R().is_degenerate_3_object()(*this);
   }
@@ -103,27 +110,27 @@ public:
     return R().oriented_side_3_object()(*this, p);
   }
 
-  bool has_on_positive_side(const Point_3 &p) const
+  Boolean has_on_positive_side(const Point_3 &p) const
   {
     return R().has_on_positive_side_3_object()(*this, p);
   }
 
-  bool has_on_negative_side(const Point_3 &p) const
+  Boolean has_on_negative_side(const Point_3 &p) const
   {
     return R().has_on_negative_side_3_object()(*this, p);
   }
 
-  bool has_on_boundary(const Point_3 &p) const
+  Boolean has_on_boundary(const Point_3 &p) const
   {
     return R().has_on_boundary_3_object()(*this, p);
   }
 
-  bool has_on_bounded_side(const Point_3 &p) const
+  Boolean has_on_bounded_side(const Point_3 &p) const
   {
     return R().has_on_bounded_side_3_object()(*this, p);
   }
 
-  bool has_on_unbounded_side(const Point_3 &p) const
+  Boolean has_on_unbounded_side(const Point_3 &p) const
   {
     return R().has_on_unbounded_side_3_object()(*this, p);
   }
@@ -147,7 +154,7 @@ template < class R >
 std::ostream &
 operator<<(std::ostream &os, const Tetrahedron_3<R> &t)
 {
-    switch(get_mode(os)) {
+    switch(IO::get_mode(os)) {
     case IO::ASCII :
         return os << t[0] << ' ' << t[1] << ' ' << t[2] << ' ' << t[3];
     case IO::BINARY :

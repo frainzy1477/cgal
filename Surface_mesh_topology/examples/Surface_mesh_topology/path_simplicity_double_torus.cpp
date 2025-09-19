@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 {
   bool draw=(argc>1?std::string(argv[1])=="-draw":false);
   LCC_3_cmap lcc;
-  if (!CGAL::load_off(lcc, "data/double-torus.off"))
+  if (!CGAL::load_off(lcc, CGAL::data_file_path("meshes/double-torus-example.off").c_str()))
   {
     std::cout<<"ERROR reading file data/double-torus.off"<<std::endl;
     exit(EXIT_FAILURE);
@@ -107,7 +107,10 @@ int main(int argc, char** argv)
            <<" simple."<<std::endl;
 
   if (draw)
-  { CGAL::draw(lcc, {p1, p2, p3}); }
+  {
+    auto cycles={p1, p2, p3};
+    CGAL::draw(lcc, cycles);
+  }
 
   return EXIT_SUCCESS;
 }

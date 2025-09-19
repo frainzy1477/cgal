@@ -21,7 +21,7 @@
  * embedded on the sphere.
  *
  * This file consists of the definition of the main type, namely
- * Arr_spherical_gaussian_map_2 and a service tye,
+ * Arr_spherical_gaussian_map_2 and a service type,
  * namely Arr_sgm_initializer, that initializes an object of the main type.
  */
 
@@ -89,7 +89,7 @@ public:
 };
 #endif
 
-/*! Arr_sgm_initializer is an algorothmic framework that initializes a
+/*! Arr_sgm_initializer is an algorithmic framework that initializes a
  * Arr_spherical_gaussian_map_3 structure. It is parameterized by the SGM to
  * be initialized and by a visitor class.
  */
@@ -115,7 +115,7 @@ public:
   virtual ~Arr_sgm_initializer() {}
 
   /*! Insert a great arc whose angle is less than Pi and is represented by two
-   * normals into the SGM. Each normal defines an end point of the greate arc.
+   * normals into the SGM. Each normal defines an end point of the great arc.
    * \param normal1 represents the source normal.
    * \param normal2 represents the target normal.
    */
@@ -133,14 +133,17 @@ public:
                                  const Vector_3 & normal2,
                                  OutputIterator oi)
   {
-    Curve_2 cv(normal1.direction(), normal2.direction());
-    const Geometry_traits_2 * traits = this->m_sgm.geometry_traits();
-    oi = traits->make_x_monotone_2_object()(cv, oi);
+    const Geometry_traits_2* traits = this->m_sgm.geometry_traits();
+    auto ctr_point = traits->construct_point_2_object();
+    Curve_2 cv =
+      traits->construct_curve_2_object()(ctr_point(normal1.direction()),
+                                         ctr_point(normal2.direction()));
+    *oi++ = traits->make_x_monotone_2_object()(cv, oi);
     return oi;
   }
 
   /*! Insert a great arc whose angle is less than Pi and is represented by two
-   * normals into the SGM. Each normal defines an end point of the greate arc.
+   * normals into the SGM. Each normal defines an end point of the great arc.
    * \param normal1 represents the source normal.
    * \param normal2 represents the target normal.
    * \return the handle for the halfedge directed from the endpoint
@@ -151,14 +154,14 @@ public:
   OutputIterator insert(const Vector_3 & normal1, const Vector_3 & normal2,
                         OutputIterator oi)
   {
-    typedef boost::variant<Point_2, X_monotone_curve_2>
+    typedef std::variant<Point_2, X_monotone_curve_2>
       Make_x_monotone_result;
 
     std::list<Make_x_monotone_result> x_objects;
     make_x_monotone(normal1, normal2, std::back_inserter(x_objects));
 
     auto it = x_objects.begin();
-    const auto* xc = boost::get<X_monotone_curve_2>(&(*it));
+    const auto* xc = std::get_if<X_monotone_curve_2>(&(*it));
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
     std::cout << "1.a. insert_in_face_interior(" << *xc << ")" << std::endl;
 #endif
@@ -169,7 +172,7 @@ public:
     ++it;
     if (it == x_objects.end()) return oi;
 
-    xc = boost::get<X_monotone_curve_2>(&(*it));
+    xc = std::get_if<X_monotone_curve_2>(&(*it));
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
     std::cout << "1.b. insert_from_vertex(" << *xc << ")" << std::endl;
 #endif
@@ -180,7 +183,7 @@ public:
   }
 
   /*! Insert a great arc whose angle is less than Pi and is represented by two
-   * normals into the SGM. Each normal defines an end point of the greate arc.
+   * normals into the SGM. Each normal defines an end point of the great arc.
    * \param normal1 represents the source normal.
    * \param normal2 represents the target normal.
    * \return the handle for the halfedge directed from the endpoint
@@ -192,14 +195,14 @@ public:
                         const Vector_3 & normal2,
                         OutputIterator oi)
   {
-    typedef boost::variant<Point_2, X_monotone_curve_2>
+    typedef std::variant<Point_2, X_monotone_curve_2>
       Make_x_monotone_result;
 
     std::list<Make_x_monotone_result> x_objects;
     make_x_monotone(normal1, normal2, std::back_inserter(x_objects));
 
     auto it = x_objects.begin();
-    const auto* xc = boost::get<X_monotone_curve_2>(&(*it));
+    const auto* xc = std::get_if<X_monotone_curve_2>(&(*it));
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
     std::cout << "2.a. insert_from_vertex(" << *xc << ", "
               << vertex1->point() << ")" << std::endl;
@@ -213,7 +216,7 @@ public:
     ++it;
     if (it == x_objects.end()) return oi;
 
-    xc = boost::get<X_monotone_curve_2>(&(*it));
+    xc = std::get_if<X_monotone_curve_2>(&(*it));
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
     std::cout << "2.b. insert_from_vertex(" << *xc << ")" << std::endl;
 #endif
@@ -224,7 +227,7 @@ public:
   }
 
   /*! Insert a great arc whose angle is less than Pi and is represented by two
-   * normals into the SGM. Each normal defines an end point of the greate arc.
+   * normals into the SGM. Each normal defines an end point of the great arc.
    * \param normal1 represents the source normal.
    * \param normal2 represents the target normal.
    * \param vertex the handle of the vertex that is the source of the arc
@@ -236,7 +239,7 @@ public:
                         const Vector_3 & normal2, Vertex_handle vertex2,
                         OutputIterator oi)
   {
-    typedef boost::variant<Point_2, X_monotone_curve_2>
+    typedef std::variant<Point_2, X_monotone_curve_2>
       Make_x_monotone_result;
 
     std::list<Make_x_monotone_result> x_objects;
@@ -244,7 +247,7 @@ public:
 
     auto it = x_objects.begin();
     if (x_objects.size() == 1) {
-      const auto* xc = boost::get<X_monotone_curve_2>(&(*it));
+      const auto* xc = std::get_if<X_monotone_curve_2>(&(*it));
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
       std::cout << "3. insert_from_vertex(" << *xc << ")" << std::endl;
 #endif
@@ -255,8 +258,8 @@ public:
       return oi;
     }
 
-    const X_monotone_curve_2* xc1 = boost::get<X_monotone_curve_2>(&(*it++));
-    const X_monotone_curve_2* xc2 = boost::get<X_monotone_curve_2>(&(*it));
+    const X_monotone_curve_2* xc1 = std::get_if<X_monotone_curve_2>(&(*it++));
+    const X_monotone_curve_2* xc2 = std::get_if<X_monotone_curve_2>(&(*it));
 
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
     std::cout << "3.a. insert_from_vertex(" << *xc2 << ")" << std::endl;
@@ -278,7 +281,7 @@ public:
   }
 
   /*! Insert a great arc whose angle is less than Pi and is represented by two
-   * normals into the SGM. Each normal defines an end point of the greate arc.
+   * normals into the SGM. Each normal defines an end point of the great arc.
    * \param normal1 represents the source normal.
    * \param normal2 represents the target normal.
    * \param vertex1 the handle of the vertex that is the source of the arc
@@ -291,13 +294,13 @@ public:
                         const Vector_3 & normal2, Vertex_handle vertex2,
                         OutputIterator oi)
   {
-    typedef boost::variant<Point_2, X_monotone_curve_2>
+    typedef std::variant<Point_2, X_monotone_curve_2>
       Make_x_monotone_result;
     std::list<Make_x_monotone_result> x_objects;
     make_x_monotone(normal1, normal2, std::back_inserter(x_objects));
     auto it = x_objects.begin();
     if (x_objects.size() == 1) {
-      const auto* xc = boost::get<X_monotone_curve_2>(&(*it));
+      const auto* xc = std::get_if<X_monotone_curve_2>(&(*it));
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
       std::cout << "4. insert_at_vertices(" << *xc << ")" << std::endl;
 #endif
@@ -305,8 +308,8 @@ public:
       return oi;
     }
 
-    const X_monotone_curve_2 * xc1 = boost::get<X_monotone_curve_2>(&(*it++));
-    const X_monotone_curve_2 * xc2 = boost::get<X_monotone_curve_2>(&(*it));
+    const X_monotone_curve_2 * xc1 = std::get_if<X_monotone_curve_2>(&(*it++));
+    const X_monotone_curve_2 * xc2 = std::get_if<X_monotone_curve_2>(&(*it));
 
 #if CGAL_ARR_SPHERICAL_GAUSSIAN_MAP_3_DEBUG==1
     std::cout << "4.a. insert_from_vertex(" << *xc1
@@ -349,8 +352,8 @@ public:
   typedef Traits                                            Geometry_traits_2;
 
   typedef Arrangement_on_surface_2<Traits,
-        Arr_spherical_topology_traits_2<Traits, T_Dcel<Traits> > >
-                                                                                                                        Base;
+    Arr_spherical_topology_traits_2<Traits, T_Dcel<Traits> > >
+                                                            Base;
 
   /*! Parameter-less Constructor */
   Arr_spherical_gaussian_map_3() { }

@@ -22,6 +22,7 @@
 #include <CGAL/config.h>
 #include <CGAL/utils.h>
 #include <CGAL/enum.h>
+#include <CGAL/IO/io.h>
 #include <algorithm>
 #include <iosfwd>
 #include <iostream>
@@ -262,7 +263,7 @@ lexicographical_compare_three_valued( InputIterator1 first1, InputIterator1 last
     The iterator range \c [first,beyond) is written
     to \c os (obeying CGAL I/O modes). Each element is bracketed by
     \c pre and \c post (default: empty string). Adjacent values are
-    spearated by \c sep (default: ", ", i.e. comma space).
+    separated by \c sep (default: ", ", i.e. comma space).
     The stream \c os is returned in its new state after output.
 
     Example:
@@ -280,8 +281,8 @@ output_range(std::ostream& os,
 {
     InputIterator it = first;
     if (it != beyond) {
-        os << pre << oformat(*it) << post;
-        while (++it != beyond) os << sep << pre << oformat(*it) << post;
+        os << pre << CGAL::IO::oformat(*it) << post;
+        while (++it != beyond) os << sep << pre << CGAL::IO::oformat(*it) << post;
     }
     return os;
 }

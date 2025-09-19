@@ -50,7 +50,7 @@ std::vector<vertex_descriptor> extract_k_ring(const Polyhedron &P, vertex_descri
 int main()
 {
   Polyhedron mesh;
-  std::ifstream input("data/plane.off");
+  std::ifstream input(CGAL::data_file_path("meshes/plane.off"));
 
   if ( !input || !(input >> mesh) || mesh.empty() ) {
     std::cerr<< "Cannot open data/plane.off";
@@ -65,7 +65,7 @@ int main()
 
   // Select and insert the vertices of the region of interest
   vertex_iterator vb, ve;
-  boost::tie(vb,ve) = vertices(mesh);
+  std::tie(vb,ve) = vertices(mesh);
   std::vector<vertex_descriptor> roi = extract_k_ring(mesh, *std::next(vb, 47), 9);
   deform_mesh.insert_roi_vertices(roi.begin(), roi.end());
 

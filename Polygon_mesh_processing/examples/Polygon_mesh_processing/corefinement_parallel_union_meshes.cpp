@@ -10,20 +10,21 @@
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 typedef Kernel::Point_3 Point_3;
+typedef Kernel::Aff_transformation_3 Aff_transformation_3;
 typedef CGAL::Surface_mesh<Point_3> Mesh;
 
 namespace PMP = CGAL::Polygon_mesh_processing;
 
 int main(int argc, char** argv)
 {
-  std::ifstream in(argc>1?argv[1]:"data/eight.off");
+  std::ifstream in(argc>1?argv[1]:CGAL::data_file_path("meshes/eight.off"));
   int nb_copies = argc > 2 ? atoi(argv[2]) : 100;
   if (nb_copies<=0) return 1;
   std::vector<Mesh> meshes(nb_copies);
   in >> meshes[0];
   for (int i=1; i<nb_copies; ++i)
   {
-    CGAL::Aff_transformation_3<Kernel> trans(CGAL::Translation(),  Kernel::Vector_3(i*0.2, 0, 0));
+    Aff_transformation_3 trans(CGAL::Translation(),  Kernel::Vector_3(i*0.2, 0, 0));
     meshes[i]=meshes[0];
     PMP::transform(trans, meshes[i]);
   }

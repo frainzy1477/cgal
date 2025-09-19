@@ -13,7 +13,7 @@
 //
 // file          : test/Polytope_distance_d/test_Polytope_distance_d.h
 // package       : $CGAL_Package: Polytope_distance_d $
-// chapter       : Geometric Optimisation
+// chapter       : Geometric Optimization
 //
 // revision      : $Id$
 // revision_date : $Date$
@@ -55,7 +55,7 @@ test_Polytope_distance_d( ForwardIterator p_first, ForwardIterator p_last,
     CGAL::Verbose_ostream verr0( verbose == 0);
     CGAL::Verbose_ostream verr1( verbose == 1);
     CGAL::Verbose_ostream verrX( verbose == 2);
-    CGAL::set_pretty_mode( verr.out());
+    CGAL::IO::set_pretty_mode( verr.out());
 
     bool  is_valid_verbose = ( verbose > 1);
 

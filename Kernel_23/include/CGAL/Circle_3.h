@@ -23,7 +23,6 @@
 #define CGAL_CIRCLE_3_H
 
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/Bbox_3.h>
 #include <CGAL/representation_tags.h>
@@ -44,7 +43,7 @@ template <class R_>
   typedef typename R_::Direction_3           Direction_3;
 
   typedef Circle_3                           Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Circle_3>::value));
+  static_assert(std::is_same<Self, typename R_::Circle_3>::value);
 
 public:
 
@@ -93,20 +92,23 @@ public:
   Circle_3(const Rep& r)
     : Rep(r) {}
 
+  Circle_3(Rep&& r)
+    : Rep(std::move(r)) {}
+
   decltype(auto)
   diametral_sphere() const
   {
     return typename R::Construct_sphere_3()(*this);
   }
 
-  Point_3 center() const
+  decltype(auto) center() const
   {
-    return typename R::Construct_sphere_3()(*this).center();
+    return diametral_sphere().center();
   }
 
-  FT squared_radius() const
+  decltype(auto) squared_radius() const
   {
-    return typename R::Construct_sphere_3()(*this).squared_radius();
+    return diametral_sphere().squared_radius();
   }
 
   decltype(auto)
@@ -120,27 +122,27 @@ public:
     return typename R::Construct_bbox_3()(*this);
   }
 
-        FT area_divided_by_pi() const
-        {
-          return typename R::Compute_area_divided_by_pi_3()(*this);
+  decltype(auto) area_divided_by_pi() const
+  {
+    return typename R::Compute_area_divided_by_pi_3()(*this);
   }
 
   double approximate_area() const
   {
-          return typename R::Compute_approximate_area_3()(*this);
-        }
+    return typename R::Compute_approximate_area_3()(*this);
+  }
 
-        FT squared_length_divided_by_pi_square() const
-        {
-          return typename R::Compute_squared_length_divided_by_pi_square_3()(*this);
+  FT squared_length_divided_by_pi_square() const
+  {
+    return typename R::Compute_squared_length_divided_by_pi_square_3()(*this);
   }
 
   double approximate_squared_length() const
   {
-          return typename R::Compute_approximate_squared_length_3()(*this);
-        }
+    return typename R::Compute_approximate_squared_length_3()(*this);
+  }
 
-        typename R::Boolean
+  typename R::Boolean
   has_on(const Point_3 &p) const
   {
     return typename R::Has_on_3()(*this, p);
@@ -150,16 +152,7 @@ public:
 
 template < typename R >
 inline
-bool
-operator==(const Circle_3<R> &p,
-           const Circle_3<R> &q)
-{
-  return R().equal_3_object()(p, q);
-}
-
-template < typename R >
-inline
-bool
+typename R::Boolean
 operator!=(const Circle_3<R> &p,
            const Circle_3<R> &q)
 {

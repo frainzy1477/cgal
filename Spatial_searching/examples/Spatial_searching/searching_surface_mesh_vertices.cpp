@@ -25,10 +25,10 @@ typedef K_neighbor_search::Distance                                     Distance
 
 int main(int argc, char* argv[])
 {
-  const char* filename = (argc>1) ? argv[1] : "data/tripod.off";
+  const std::string filename = (argc>1) ? argv[1] : CGAL::data_file_path("meshes/tripod.off");
 
   Mesh mesh;
-  if(!CGAL::read_polygon_mesh(filename, mesh))
+  if(!CGAL::IO::read_polygon_mesh(filename, mesh))
   {
     std::cerr << "Invalid input." << std::endl;
     return 1;
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
   // Insert number_of_data_points in the tree
   Tree tree(vertices(mesh).begin(), vertices(mesh).end(), Splitter(), Traits(vppmap));
 
-  // search K nearest neighbours
+  // search K nearest neighbors
   Point_3 query(0.0, 0.0, 0.0);
   Distance tr_dist(vppmap);
 

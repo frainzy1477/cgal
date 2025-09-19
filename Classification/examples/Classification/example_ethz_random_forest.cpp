@@ -36,7 +36,7 @@ typedef Classification::Point_set_feature_generator<Kernel, Point_set, Pmap>    
 
 int main (int argc, char** argv)
 {
-  std::string filename = "data/b9_training.ply";
+  std::string filename = CGAL::data_file_path("points_3/b9_training.ply");
 
   if (argc > 1)
     filename = argv[1];
@@ -47,10 +47,8 @@ int main (int argc, char** argv)
   std::cerr << "Reading input" << std::endl;
   in >> pts;
 
-  Imap label_map;
-  bool lm_found = false;
-  std::tie (label_map, lm_found) = pts.property_map<int> ("label");
-  if (!lm_found)
+  std::optional<Imap> label_map = pts.property_map<int> ("label");
+  if (!label_map.has_value())
   {
     std::cerr << "Error: \"label\" property not found in input file." << std::endl;
     return EXIT_FAILURE;
@@ -78,7 +76,7 @@ int main (int argc, char** argv)
   Label_handle roof = labels.add ("roof");
 
   // Check if ground truth is valid for this label set
-  if (!labels.is_valid_ground_truth (pts.range(label_map), true))
+  if (!labels.is_valid_ground_truth (pts.range(label_map.value()), true))
     return EXIT_FAILURE;
 
   std::vector<int> label_indices(pts.size(), -1);
@@ -89,7 +87,7 @@ int main (int argc, char** argv)
   std::cerr << "Training" << std::endl;
   t.reset();
   t.start();
-  classifier.train (pts.range(label_map));
+  classifier.train (pts.range(label_map.value()));
   t.stop();
   std::cerr << "Done in " << t.time() << " second(s)" << std::endl;
 
@@ -104,7 +102,7 @@ int main (int argc, char** argv)
   std::cerr << "Classification with graphcut done in " << t.time() << " second(s)" << std::endl;
 
   std::cerr << "Precision, recall, F1 scores and IoU:" << std::endl;
-  Classification::Evaluation evaluation (labels, pts.range(label_map), label_indices);
+  Classification::Evaluation evaluation (labels, pts.range(label_map.value()), label_indices);
 
   for (Label_handle l : labels)
   {
@@ -126,10 +124,10 @@ int main (int argc, char** argv)
 
   for (std::size_t i = 0; i < label_indices.size(); ++ i)
   {
-    label_map[i] = label_indices[i]; // update label map with computed classification
+    label_map.value()[i] = label_indices[i]; // update label map with computed classification
 
     Label_handle label = labels[label_indices[i]];
-    const CGAL::Color& color = label->color();
+    const CGAL::IO::Color& color = label->color();
     red[i] = color.red();
     green[i] = color.green();
     blue[i] = color.blue();
@@ -140,7 +138,7 @@ int main (int argc, char** argv)
   classifier.save_configuration(fconfig);
 
   // Write result
-  std::ofstream f ("classification.ply");
+  std::ofstream f ("classification_ethz_random_forest.ply");
   f.precision(18);
   f << pts;
 

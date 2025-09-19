@@ -40,7 +40,7 @@ struct Restricted_FT<float> { typedef float type; };
 
 }
 
-/// \ingroup PkgSolverInterfaceRef
+/// \ingroup PkgSolverInterfaceLS
 ///
 /// The class `Eigen_diagonalize_traits` provides an interface to the
 /// diagonalization of covariance matrices of \ref thirdpartyEigen
@@ -51,9 +51,9 @@ struct Restricted_FT<float> { typedef float type; };
 /// \tparam FT Number type
 /// \tparam dim Dimension of the matrices and vectors
 ///
-/// \cgalModels `DiagonalizeTraits`
+/// \cgalModels{DiagonalizeTraits}
 ///
-/// \sa http://eigen.tuxfamily.org/index.php?title=Main_Page
+/// \sa https://eigen.tuxfamily.org/index.php?title=Main_Page
 template <typename FT, unsigned int dim = 3>
 class Eigen_diagonalize_traits
 {

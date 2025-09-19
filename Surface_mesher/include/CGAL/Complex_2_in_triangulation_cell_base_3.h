@@ -17,6 +17,11 @@
 
 #include <CGAL/license/Surface_mesher.h>
 
+#define CGAL_DEPRECATED_HEADER "<CGAL/Complex_2_in_triangulation_cell_base_3.h>"
+#define CGAL_DEPRECATED_MESSAGE_DETAILS \
+  "The 3D Mesh Generation package (see https://doc.cgal.org/latest/Mesh_3/) should be used instead."
+#include <CGAL/Installation/internal/deprecation_warning.h>
+
 #include <CGAL/Delaunay_triangulation_cell_base_3.h>
 
 #include <bitset>
@@ -120,7 +125,7 @@ operator>>(std::istream &is, Complex_2_in_triangulation_cell_base_3<GT, Cb> &c)
   is >> static_cast<Cb&>(c);
   for(int i = 0; i < 4; ++i)
   {
-    if(is_ascii(is))
+    if(IO::is_ascii(is))
       is >> b;
     else
     {
@@ -142,7 +147,7 @@ operator<<(std::ostream &os,
   os << static_cast<const Cb&>(c);
   for(int i = 0; i < 4; ++i)
   {
-    if(is_ascii(os))
+    if(IO::is_ascii(os))
       os << ' ' << c.is_facet_on_surface(i);
     else
       write(os, static_cast<int>(c.is_facet_on_surface(i)));

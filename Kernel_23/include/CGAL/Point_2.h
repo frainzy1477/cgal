@@ -20,10 +20,11 @@
 #include <CGAL/Origin.h>
 #include <CGAL/Bbox_2.h>
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/representation_tags.h>
 #include <CGAL/Dimension.h>
+
+#include <type_traits>
 
 namespace CGAL {
 
@@ -36,7 +37,7 @@ class Point_2 : public R_::Kernel_base::Point_2
   typedef typename R_::Kernel_base::Point_2  RPoint_2;
 
   typedef Point_2                            Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Point_2>::value));
+  static_assert(std::is_same<Self, typename R_::Point_2>::value);
 
 public:
 
@@ -69,14 +70,20 @@ public:
     : RPoint_2(p)
   {}
 
+  Point_2(RPoint_2&& p)
+    : RPoint_2(std::move(p))
+  {}
+
   explicit
   Point_2(const Weighted_point_2& wp)
     : Rep(wp.point())
   {}
 
-  template < typename T1, typename T2 >
-  Point_2(const T1 &x, const T2 &y)
-    : Rep(typename R::Construct_point_2()(Return_base_tag(), x, y))
+  template < typename T1, typename T2>
+  Point_2(T1&& x, T2&& y)
+    : Rep(typename R::Construct_point_2()(Return_base_tag(),
+                                          std::forward<T1>(x),
+                                          std::forward<T2>(y)))
   {}
 
   Point_2(const RT& hx, const RT& hy, const RT& hw)
@@ -84,7 +91,7 @@ public:
   {}
 
   friend void swap(Self& a, Self& b)
-#ifdef __cpp_lib_is_swappable
+#if !defined(__INTEL_COMPILER) && defined(__cpp_lib_is_swappable)
     noexcept(std::is_nothrow_swappable_v<Rep>)
 #endif
   {
@@ -190,7 +197,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Point_2<R>& p,const Cartesian_tag&)
 {
-    switch(get_mode(os)) {
+    switch(IO::get_mode(os)) {
     case IO::ASCII :
         return os << p.x() << ' ' << p.y();
     case IO::BINARY :
@@ -206,7 +213,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Point_2<R>& p,const Homogeneous_tag&)
 {
-  switch(get_mode(os))
+  switch(IO::get_mode(os))
   {
     case IO::ASCII :
         return os << p.hx() << ' ' << p.hy() << ' ' << p.hw();
@@ -235,9 +242,9 @@ std::istream&
 extract(std::istream& is, Point_2<R>& p, const Cartesian_tag&)
 {
   typename R::FT x(0), y(0);
-    switch(get_mode(is)) {
+    switch(IO::get_mode(is)) {
     case IO::ASCII :
-        is >> iformat(x) >> iformat(y);
+        is >> IO::iformat(x) >> IO::iformat(y);
         break;
     case IO::BINARY :
         read(is, x);
@@ -246,11 +253,11 @@ extract(std::istream& is, Point_2<R>& p, const Cartesian_tag&)
     default:
         is.setstate(std::ios::failbit);
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
     }
     if (is)
-      p = Point_2<R>(x, y);
+      p = Point_2<R>(std::move(x), std::move(y));
     return is;
 }
 
@@ -260,7 +267,7 @@ std::istream&
 extract(std::istream& is, Point_2<R>& p, const Homogeneous_tag&)
 {
   typename R::RT hx, hy, hw;
-  switch(get_mode(is))
+  switch(IO::get_mode(is))
   {
     case IO::ASCII :
         is >> hx >> hy >> hw;
@@ -273,7 +280,7 @@ extract(std::istream& is, Point_2<R>& p, const Homogeneous_tag&)
     default:
         is.setstate(std::ios::failbit);
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
   }
   if (is)

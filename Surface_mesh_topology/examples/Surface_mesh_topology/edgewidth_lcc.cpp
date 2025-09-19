@@ -29,7 +29,7 @@ void display_cycle_info(const LCC_3& lcc, const Path_on_surface& cycle)
 
 int main(int argc, char* argv[])
 {
-  std::string filename(argc==1?"data/3torus.off":argv[1]);
+  std::string filename(argc==1?CGAL::data_file_path("meshes/3torus.off"):argv[1]);
   bool draw=(argc<3?false:(std::string(argv[2])=="-draw"));
   LCC_3 lcc;
   if (!CGAL::load_off(lcc, filename.c_str())) // Load the off file.
@@ -48,7 +48,11 @@ int main(int argc, char* argv[])
 
   std::cout<<"Cycle 1 (pink): "; display_cycle_info(lcc, cycle1);
   std::cout<<"Cycle 2 (green): "; display_cycle_info(lcc, cycle2);
-  if (draw) { CGAL::draw(lcc, {cycle1, cycle2}); }
+  if (draw)
+  {
+    auto cycles={cycle1, cycle2};
+    CGAL::draw(lcc, cycles);
+  }
 
   return EXIT_SUCCESS;
 }

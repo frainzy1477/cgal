@@ -20,7 +20,6 @@
 #include <CGAL/Origin.h>
 #include <CGAL/Kernel/mpl.h>
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/kernel_assertions.h>
 #include <CGAL/representation_tags.h>
@@ -43,7 +42,7 @@ class Vector_2 : public R_::Kernel_base::Vector_2
   typedef typename R_::Kernel_base::Vector_2  RVector_2;
 
   typedef Vector_2                    Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Vector_2>::value));
+  static_assert(std::is_same<Self, typename R_::Vector_2>::value);
 
 public:
 
@@ -70,6 +69,9 @@ public:
   Vector_2(const RVector_2& v)
       : RVector_2(v) {}
 
+  Vector_2(RVector_2&& v)
+      : RVector_2(std::move(v)) {}
+
   Vector_2(const Point_2& a, const Point_2& b)
       : RVector_2(typename R::Construct_vector_2()(Return_base_tag(), a, b)) {}
 
@@ -86,14 +88,17 @@ public:
       : RVector_2(typename R::Construct_vector_2()(Return_base_tag(), v)) {}
 
   template < typename T1, typename T2 >
-  Vector_2(const T1 &x, const T2 &y)
-      : RVector_2(typename R::Construct_vector_2()(Return_base_tag(), x,y)) {}
+  Vector_2(T1&& x, T2&& y)
+    : RVector_2(typename R::Construct_vector_2()(Return_base_tag(),
+                                                 std::forward<T1>(x),
+                                                 std::forward<T2>(y)))
+  {}
 
   Vector_2(const RT &x, const RT &y, const RT &w)
       : RVector_2(typename R::Construct_vector_2()(Return_base_tag(), x,y,w)) {}
 
   friend void swap(Self& a, Self& b)
-#ifdef __cpp_lib_is_swappable
+#if !defined(__INTEL_COMPILER) && defined(__cpp_lib_is_swappable)
     noexcept(std::is_nothrow_swappable_v<Rep>)
 #endif
   {
@@ -249,48 +254,13 @@ public:
   {
     return t.transform(*this);
   }
-
 };
-
-
-template < class R >
-inline
-bool
-operator==(const Vector_2<R> &v, const Null_vector &n)
-{
-  return R().equal_2_object()(v, n);
-}
-
-template < class R >
-inline
-bool
-operator==(const Null_vector &n, const Vector_2<R> &v)
-{
-  return v == n;
-}
-
-template < class R >
-inline
-bool
-operator!=(const Vector_2<R> &v, const Null_vector &n)
-{
-  return !(v == n);
-}
-
-template < class R >
-inline
-bool
-operator!=(const Null_vector &n, const Vector_2<R> &v)
-{
-  return !(v == n);
-}
-
 
 template <class R >
 std::ostream&
 insert(std::ostream& os, const Vector_2<R>& v, const Cartesian_tag&)
 {
-    switch(get_mode(os)) {
+    switch(IO::get_mode(os)) {
     case IO::ASCII :
         return os << v.x() << ' ' << v.y();
     case IO::BINARY :
@@ -306,7 +276,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Vector_2<R>& v, const Homogeneous_tag&)
 {
-  switch(get_mode(os))
+  switch(IO::get_mode(os))
   {
     case IO::ASCII :
         return os << v.hx() << ' ' << v.hy() << ' ' << v.hw();
@@ -336,9 +306,9 @@ std::istream&
 extract(std::istream& is, Vector_2<R>& v, const Cartesian_tag&)
 {
   typename R::FT x(0), y(0);
-    switch(get_mode(is)) {
+    switch(IO::get_mode(is)) {
     case IO::ASCII :
-        is >> iformat(x) >> iformat(y);
+        is >> IO::iformat(x) >> IO::iformat(y);
         break;
     case IO::BINARY :
         read(is, x);
@@ -347,7 +317,7 @@ extract(std::istream& is, Vector_2<R>& v, const Cartesian_tag&)
     default:
         is.setstate(std::ios::failbit);
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
     }
     if (is)
@@ -361,7 +331,7 @@ std::istream&
 extract(std::istream& is, Vector_2<R>& v, const Homogeneous_tag&)
 {
   typename R::RT hx, hy, hw;
-  switch(get_mode(is))
+  switch(IO::get_mode(is))
   {
     case IO::ASCII :
         is >> hx >> hy >> hw;
@@ -374,7 +344,7 @@ extract(std::istream& is, Vector_2<R>& v, const Homogeneous_tag&)
     default:
         is.setstate(std::ios::failbit);
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
   }
   v = Vector_2<R>(hx, hy, hw);

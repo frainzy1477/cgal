@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 {
   // read input polyhedron
   Triangle_mesh tmesh;
-  std::ifstream input((argc>1)?argv[1]:"data/elephant.off");
+  std::ifstream input((argc>1)?argv[1]:CGAL::data_file_path("meshes/elephant.off"));
   input >> tmesh;
 
   // initialize indices of vertices, halfedges and faces
@@ -45,10 +45,10 @@ int main(int argc, char** argv)
 
   // For all vertices in the tmesh, compute the points of
   // the shortest path to the source point and write them
-  // into a file readable using the CGAL Polyhedron demo
+  // into a file readable using CGAL Lab
   std::ofstream output("shortest_paths_with_id.polylines.txt");
   vertex_iterator vit, vit_end;
-  for ( boost::tie(vit, vit_end) = vertices(tmesh);
+  for ( std::tie(vit, vit_end) = vertices(tmesh);
         vit != vit_end; ++vit)
   {
     std::vector<Traits::Point_3> points;

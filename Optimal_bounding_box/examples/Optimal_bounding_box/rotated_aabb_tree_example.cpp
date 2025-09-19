@@ -2,7 +2,7 @@
 #include <CGAL/Surface_mesh.h>
 
 #include <CGAL/AABB_tree.h>
-#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_traits_3.h>
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/optimal_bounding_box.h>
 #include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
@@ -33,10 +33,10 @@ private:
 
 int main(int argc, char** argv)
 {
-  const char* filename = (argc > 1) ? argv[1] : "data/pig.off";
+  const std::string filename = (argc > 1) ? argv[1] : CGAL::data_file_path("meshes/pig.off");
 
   Surface_mesh sm;
-  if(!CGAL::Polygon_mesh_processing::read_polygon_mesh(filename, sm) || sm.is_empty())
+  if(!CGAL::Polygon_mesh_processing::IO::read_polygon_mesh(filename, sm) || sm.is_empty())
   {
     std::cerr << "Invalid input file." << std::endl;
     return EXIT_FAILURE;
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
   // rotated AABB tree
   typedef CGAL::AABB_face_graph_triangle_primitive<Surface_mesh, decltype(aff_tr_vpm)> AABB_face_graph_primitive;
-  typedef CGAL::AABB_traits<K, AABB_face_graph_primitive>                              AABB_face_graph_traits;
+  typedef CGAL::AABB_traits_3<K, AABB_face_graph_primitive>                            AABB_face_graph_traits;
 
   CGAL::AABB_tree<AABB_face_graph_traits> tree(faces(sm).begin(), faces(sm).end(), sm, aff_tr_vpm);
 

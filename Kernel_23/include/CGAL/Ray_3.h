@@ -18,7 +18,6 @@
 #define CGAL_RAY_3_H
 
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/representation_tags.h>
 #include <CGAL/Dimension.h>
@@ -29,6 +28,7 @@ namespace CGAL {
 template <class R_>
 class Ray_3 : public R_::Kernel_base::Ray_3
 {
+  typedef typename R_::Boolean               Boolean;
   typedef typename R_::FT                    FT;
   typedef typename R_::Point_3               Point_3;
   typedef typename R_::Direction_3           Direction_3;
@@ -37,7 +37,7 @@ class Ray_3 : public R_::Kernel_base::Ray_3
   typedef typename R_::Aff_transformation_3  Aff_transformation_3;
 
   typedef Ray_3                            Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Ray_3>::value));
+  static_assert(std::is_same<Self, typename R_::Ray_3>::value);
 
 public:
 
@@ -62,6 +62,9 @@ public:
 
   Ray_3(const Rep& r)
     : Rep(r) {}
+
+  Ray_3(Rep&& r)
+    : Rep(std::move(r)) {}
 
   Ray_3(const Point_3& sp, const Point_3& secondp)
     : Rep(typename R::Construct_ray_3()(Return_base_tag(), sp, secondp)) {}
@@ -94,8 +97,8 @@ public:
   Line_3      supporting_line() const;
   Ray_3       opposite() const;
 
-  bool        is_degenerate() const;
-  bool        collinear_has_on(const Point_3 &p) const;
+  Boolean is_degenerate() const;
+  Boolean collinear_has_on(const Point_3 &p) const;
 */
 
   decltype(auto)
@@ -122,7 +125,7 @@ public:
     return source();
   }
 
-  bool has_on(const Point_3 &p) const
+  Boolean has_on(const Point_3 &p) const
   {
     return R().has_on_3_object()(*this, p);
   }
@@ -154,7 +157,7 @@ public:
     return R().construct_line_3_object()(source(), second_point());
   }
 
-  bool is_degenerate() const
+  Boolean is_degenerate() const
   {
     return R().is_degenerate_3_object()(*this);
   }
@@ -166,7 +169,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Ray_3<R>& r, const Cartesian_tag&)
 {
-    switch(get_mode(os)) {
+    switch(IO::get_mode(os)) {
     case IO::ASCII :
         return os << r.start() << ' ' << r.direction();
     case IO::BINARY :
@@ -180,7 +183,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Ray_3<R>& r, const Homogeneous_tag&)
 {
-  switch(get_mode(os))
+  switch(IO::get_mode(os))
   {
       case IO::ASCII :
           return os << r.start() << ' ' << r.direction();

@@ -19,7 +19,6 @@
 #define CGAL_CIRCLE_2_H
 
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/Bbox_2.h>
 #include <CGAL/Dimension.h>
@@ -36,7 +35,7 @@ class Circle_2 : public R_::Kernel_base::Circle_2
   typedef typename R_::Aff_transformation_2  Aff_transformation_2;
 
   typedef Circle_2                           Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Circle_2>::value));
+  static_assert(std::is_same<Self, typename R_::Circle_2>::value);
 
 public:
 
@@ -61,6 +60,9 @@ public:
 
   Circle_2(const RCircle_2& t)
     : RCircle_2(t) {}
+
+  Circle_2(RCircle_2&& t)
+    : RCircle_2(std::move(t)) {}
 
   Circle_2(const Point_2 &center, const FT &squared_radius,
            const Orientation &orientation)
@@ -100,7 +102,8 @@ public:
     return R().compute_squared_radius_2_object()(*this);
   }
 
-  Orientation orientation() const
+  typename R::Orientation
+  orientation() const
   {
     // This make_certain(), the uncertain orientation of circles, the orientation
     // of circles, are all yucky.
@@ -175,18 +178,6 @@ public:
     return R().construct_bbox_2_object()(*this);
   }
 
-  typename R::Boolean
-  operator==(const Circle_2 &c) const
-  {
-    return R().equal_2_object()(*this, c);
-  }
-
-  typename R::Boolean
-  operator!=(const Circle_2 &c) const
-  {
-    return !(*this == c);
-  }
-
   Circle_2 transform(const Aff_transformation_2 &t) const
   {
     return t.transform(*this);
@@ -221,7 +212,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Circle_2<R>& c)
 {
-    switch(get_mode(os)) {
+    switch(IO::get_mode(os)) {
     case IO::ASCII :
         os << c.center() << ' ' << c.squared_radius() << ' '
            << static_cast<int>(c.orientation());
@@ -264,9 +255,9 @@ extract(std::istream& is, Circle_2<R>& c)
     typename R::Point_2 center;
     typename R::FT squared_radius(0);
     int o=0;
-    switch(get_mode(is)) {
+    switch(IO::get_mode(is)) {
     case IO::ASCII :
-        is >> center >> iformat(squared_radius) >> o;
+        is >> center >> IO::iformat(squared_radius) >> o;
         break;
     case IO::BINARY :
         is >> center;
@@ -276,7 +267,7 @@ extract(std::istream& is, Circle_2<R>& c)
     default:
         is.setstate(std::ios::failbit);
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
     }
     if (is)

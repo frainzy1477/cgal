@@ -19,11 +19,10 @@
 #include <CGAL/IO/PLY.h>
 #include <CGAL/property_map.h>
 #include <CGAL/value_type_traits.h>
-#include <CGAL/point_set_processing_assertions.h>
 #include <CGAL/Kernel_traits.h>
 #include <CGAL/IO/io.h>
 
-#include <CGAL/boost/graph/Named_function_parameters.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 
 #include <boost/version.hpp>
@@ -35,13 +34,9 @@
 #include <string>
 #include <tuple>
 
-#ifdef DOXYGEN_RUNNING
-#define CGAL_BGL_NP_TEMPLATE_PARAMETERS NamedParameters
-#define CGAL_BGL_NP_CLASS NamedParameters
-#define CGAL_DEPRECATED
-#endif
-
 namespace CGAL {
+
+namespace IO {
 
 #ifdef DOXYGEN_RUNNING // Document some parts from Stream_support here for convenience
 /**
@@ -122,7 +117,7 @@ make_ply_normal_reader(VectorMap normal_map);
   second element of the tuple should be a functor that constructs
   the value type of `PropertyMap` from N objects of types `T`.
 
-  \attention When reading a binary file, the flag `std::ios::binary` flag must be set during the creation of the `ifstream`.
+  \attention To read a binary file, the flag `std::ios::binary` must be set during the creation of the `ifstream`.
 
   \tparam OutputIteratorValueType type of objects that can be put in `PointOutputIterator`.
   It must be a model of `DefaultConstructible` and defaults to `value_type_traits<PointOutputIterator>::%type`.
@@ -143,12 +138,10 @@ bool read_PLY_with_properties(std::istream& is,
                               PointOutputIterator output,
                               PropertyHandler&& ... properties)
 {
-  typedef typename value_type_traits<PointOutputIterator>::type OutputValueType;
-
   if(!is)
     return false;
 
-  IO::internal::PLY_reader reader(true);
+  internal::PLY_reader reader(true);
 
   if(!(reader.init(is)))
   {
@@ -158,13 +151,13 @@ bool read_PLY_with_properties(std::istream& is,
 
   for(std::size_t i = 0; i < reader.number_of_elements(); ++ i)
   {
-    IO::internal::PLY_element& element = reader.element(i);
+    internal::PLY_element& element = reader.element(i);
 
     for(std::size_t j = 0; j < element.number_of_items(); ++ j)
     {
       for(std::size_t k = 0; k < element.number_of_properties(); ++ k)
       {
-        IO::internal::PLY_read_number* property = element.property(k);
+        internal::PLY_read_number* property = element.property(k);
         property->get(is);
 
         if(is.fail())
@@ -173,8 +166,8 @@ bool read_PLY_with_properties(std::istream& is,
 
       if(element.name() == "vertex" || element.name() == "vertices")
       {
-        OutputValueType new_element;
-        IO::internal::process_properties(element, new_element, std::forward<PropertyHandler>(properties)...);
+        OutputIteratorValueType new_element;
+        internal::process_properties(element, new_element, std::forward<PropertyHandler>(properties)...);
         *(output ++) = new_element;
       }
     }
@@ -205,7 +198,7 @@ bool read_PLY_with_properties(std::istream& is,
 
    Potential additional point properties and faces are ignored.
 
-   \attention When reading a binary file, the flag `std::ios::binary` flag must be set during the creation of the `ifstream`.
+  \attention To read a binary file, the flag `std::ios::binary` must be set during the creation of the `ifstream`.
 
    \tparam OutputIteratorValueType type of objects that can be put in `PointOutputIterator`.
    It must be a model of `DefaultConstructible` and defaults to `value_type_traits<PointOutputIterator>::%type`.
@@ -243,12 +236,12 @@ bool read_PLY_with_properties(std::istream& is,
 */
 template <typename OutputIteratorValueType,
           typename PointOutputIterator,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_PLY(std::istream& is,
               PointOutputIterator output,
-              const CGAL_BGL_NP_CLASS& np
+              const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-              , typename std::enable_if<CGAL::is_iterator<PointOutputIterator>::value>::type* = nullptr
+              , std::enable_if_t<CGAL::is_iterator<PointOutputIterator>::value>* = nullptr
 #endif
               )
 {
@@ -258,21 +251,16 @@ bool read_PLY(std::istream& is,
   typedef Point_set_processing_3::Fake_point_range<OutputIteratorValueType> PointRange;
 
   // basic geometric types
-  typedef typename CGAL::GetPointMap<PointRange, CGAL_BGL_NP_CLASS>::type PointMap;
-  typedef typename Point_set_processing_3::GetNormalMap<PointRange, CGAL_BGL_NP_CLASS>::type NormalMap;
+  typedef Point_set_processing_3_np_helper<PointRange, CGAL_NP_CLASS> NP_helper;
+  typedef typename NP_helper::Point_map PointMap;
+  typedef typename NP_helper::Normal_map NormalMap;
 
-  bool has_normals = !(boost::is_same<NormalMap,
-                       typename Point_set_processing_3::GetNormalMap<PointRange, CGAL_BGL_NP_CLASS>::NoMap>::value);
+  PointMap point_map = NP_helper::get_point_map(np);
+  NormalMap normal_map = NP_helper::get_normal_map(np);
 
-  PointMap point_map = choose_parameter<PointMap>(get_parameter(np, internal_np::point_map));
-  NormalMap normal_map = choose_parameter<NormalMap>(get_parameter(np, internal_np::normal_map));
-
-  if(has_normals)
-    return read_PLY_with_properties(is, output,
-                                    make_ply_point_reader(point_map),
-                                    make_ply_normal_reader(normal_map));
-  // else
-  return read_PLY_with_properties(is, output, make_ply_point_reader(point_map));
+  return read_PLY_with_properties(is, output,
+                                  make_ply_point_reader(point_map),
+                                  make_ply_normal_reader(normal_map));
 }
 
 /**
@@ -294,7 +282,7 @@ bool read_PLY(std::istream& is,
 
    \cgalNamedParamsBegin
      \cgalParamNBegin{use_binary_mode}
-       \cgalParamDescription{indicates whether data should be read in binary (`true`) or in ASCII (`false`)}
+       \cgalParamDescription{indicates whether data should be read in binary (`true`) or in \ascii (`false`)}
        \cgalParamType{Boolean}
        \cgalParamDefault{`true`}
      \cgalParamNEnd
@@ -325,12 +313,12 @@ bool read_PLY(std::istream& is,
 */
 template <typename OutputIteratorValueType,
           typename PointOutputIterator,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_PLY(const std::string& fname,
               PointOutputIterator output,
-              const CGAL_BGL_NP_CLASS& np
+              const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-              , typename std::enable_if<CGAL::is_iterator<PointOutputIterator>::value>::type* = nullptr
+              , std::enable_if_t<CGAL::is_iterator<PointOutputIterator>::value>* = nullptr
 #endif
               )
 {
@@ -338,198 +326,37 @@ bool read_PLY(const std::string& fname,
   if(binary)
   {
     std::ifstream is(fname, std::ios::binary);
-    CGAL::set_mode(is, CGAL::IO::BINARY);
+    CGAL::IO::set_mode(is, CGAL::IO::BINARY);
     return read_PLY<OutputIteratorValueType>(is, output, np);
   }
   else
   {
     std::ifstream is(fname);
-    CGAL::set_mode(is, CGAL::IO::ASCII);
+    CGAL::IO::set_mode(is, CGAL::IO::ASCII);
     return read_PLY<OutputIteratorValueType>(is, output, np);
   }
 }
 
 /// \cond SKIP_IN_MANUAL
 
-// variants with default NP
-template <typename OutputIteratorValueType, typename OutputIterator>
-bool read_PLY(std::istream& is, OutputIterator output,
-              typename std::enable_if<CGAL::is_iterator<OutputIterator>::value>::type* = nullptr)
-{
-  return read_PLY<OutputIteratorValueType>(is, output, parameters::all_default());
-}
-
-template <typename OutputIteratorValueType, typename OutputIterator>
-bool read_PLY(const std::string& fname, OutputIterator output,
-              typename std::enable_if<CGAL::is_iterator<OutputIterator>::value>::type* = nullptr)
-{
-  return read_PLY<OutputIteratorValueType>(fname, output, parameters::all_default());
-}
-
 // variants with default output iterator value type
-template <typename OutputIterator, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-bool read_PLY(std::istream& is, OutputIterator output, const CGAL_BGL_NP_CLASS& np,
-              typename std::enable_if<CGAL::is_iterator<OutputIterator>::value>::type* = nullptr)
+template <typename OutputIterator, typename CGAL_NP_TEMPLATE_PARAMETERS>
+bool read_PLY(std::istream& is, OutputIterator output, const CGAL_NP_CLASS& np = parameters::default_values(),
+              std::enable_if_t<CGAL::is_iterator<OutputIterator>::value>* = nullptr)
 {
   return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, np);
 }
 
-template <typename OutputIterator,typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-bool read_PLY(const std::string& fname, OutputIterator output, const CGAL_BGL_NP_CLASS& np,
-              typename std::enable_if<CGAL::is_iterator<OutputIterator>::value>::type* = nullptr)
+template <typename OutputIterator,typename CGAL_NP_TEMPLATE_PARAMETERS>
+bool read_PLY(const std::string& fname, OutputIterator output, const CGAL_NP_CLASS& np = parameters::default_values(),
+              std::enable_if_t<CGAL::is_iterator<OutputIterator>::value>* = nullptr)
 {
   return read_PLY<typename value_type_traits<OutputIterator>::type>(fname, output, np);
 }
 
-// variants with default NP and output iterator value type
-template <typename OutputIterator>
-bool read_PLY(std::istream& is, OutputIterator output,
-              typename std::enable_if<CGAL::is_iterator<OutputIterator>::value>::type* = nullptr)
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, parameters::all_default());
-}
-
-template <typename OutputIterator>
-bool read_PLY(const std::string& fname, OutputIterator output,
-              typename std::enable_if<CGAL::is_iterator<OutputIterator>::value>::type* = nullptr)
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(fname, output, parameters::all_default());
-}
-
 /// \endcond
 
-#ifndef CGAL_NO_DEPRECATED_CODE
-
-/// \cond SKIP_IN_MANUAL
-
-template <typename OutputIteratorValueType,
-          typename OutputIterator,
-          typename PointMap,
-          typename NormalMap>
-CGAL_DEPRECATED_MSG("you are using the deprecated V1 API of CGAL::read_ply_points_and_normals(), please update your code")
-bool read_ply_points_and_normals(std::istream& is, ///< input stream.
-                                 OutputIterator output, ///< output iterator over points.
-                                 PointMap point_map, ///< property map: value_type of OutputIterator -> Point_3.
-                                 NormalMap normal_map) ///< property map: value_type of OutputIterator -> Vector_3.
-{
-  return read_PLY<OutputIteratorValueType>(is, output, parameters::point_map(point_map)
-                                                                      .normal_map(normal_map));
-}
-
-template <typename OutputIterator,
-          typename PointMap,
-          typename NormalMap>
-CGAL_DEPRECATED_MSG("you are using the deprecated V1 API of CGAL::read_ply_points_and_normals(), please update your code")
-bool read_ply_points_and_normals(std::istream& is, ///< input stream.
-                                 OutputIterator output, ///< output iterator over points.
-                                 PointMap point_map, ///< property map: value_type of OutputIterator -> Point_3.
-                                 NormalMap normal_map) ///< property map: value_type of OutputIterator -> Vector_3.
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, parameters::point_map(point_map)
-                                                                                               .normal_map(normal_map));
-}
-
-template <typename OutputIteratorValueType,
-          typename OutputIterator,
-          typename NormalMap>
-CGAL_DEPRECATED_MSG("you are using the deprecated V1 API of CGAL::read_ply_points_and_normals(), please update your code")
-bool read_ply_points_and_normals(std::istream& is, ///< input stream.
-                                 OutputIterator output, ///< output iterator over points.
-                                 NormalMap normal_map) ///< property map: value_type of OutputIterator -> Vector_3.
-{
-  return read_PLY<OutputIteratorValueType>(is, output, parameters::normal_map(normal_map));
-}
-
-template <typename OutputIterator, typename NormalMap>
-CGAL_DEPRECATED_MSG("you are using the deprecated V1 API of CGAL::read_ply_points_and_normals(), please update your code")
-bool read_ply_points_and_normals(std::istream& is, ///< input stream.
-                                 OutputIterator output, ///< output iterator over points.
-                                 NormalMap normal_map) ///< property map: value_type of OutputIterator -> Vector_3.
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, parameters::normal_map(normal_map));
-}
-
-template <typename OutputIteratorValueType,
-          typename OutputIterator,
-          typename PointMap>
-CGAL_DEPRECATED_MSG("you are using the deprecated V1 API of CGAL::read_ply_points(), please update your code")
-bool read_ply_points(std::istream& is, ///< input stream.
-                     OutputIterator output, ///< output iterator over points.
-                     PointMap point_map) ///< property map: value_type of OutputIterator -> Point_3.
-{
-  return read_PLY<OutputIteratorValueType>(is, output, parameters::point_map(point_map));
-}
-
-template <typename OutputIterator,
-          typename PointMap>
-CGAL_DEPRECATED_MSG("you are using the deprecated V1 API of CGAL::read_ply_points(), please update your code")
-bool read_ply_points(std::istream& is, ///< input stream.
-                     OutputIterator output, ///< output iterator over points.
-                     PointMap point_map) ///< property map: value_type of OutputIterator -> Point_3.
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, parameters::point_map(point_map));
-}
-
-/// \endcond
-
-/**
- \ingroup PkgPointSetProcessing3IODeprecated
-
- \deprecated This function is deprecated since \cgal 5.2,
-             \link PkgPointSetProcessing3IOPly `CGAL::read_PLY_with_properties()` \endlink should be used instead.
-  */
-template <typename OutputIteratorValueType, typename OutputIterator, typename ... PropertyHandler>
-CGAL_DEPRECATED bool read_ply_points_with_properties(std::istream& is, OutputIterator output, PropertyHandler&& ... properties)
-{
-  return read_PLY_with_properties(is, output, std::forward<PropertyHandler>(properties)...);
-}
-
-/**
-  \ingroup PkgPointSetProcessing3IODeprecated
-
-   \deprecated This function is deprecated since \cgal 5.2,
-               \link PkgPointSetProcessing3IOPly `CGAL::read_PLY()` \endlink should be used instead.
-  */
-template <typename OutputIteratorValueType, typename OutputIterator, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-CGAL_DEPRECATED bool read_ply_points(std::istream& is, OutputIterator output, const CGAL_BGL_NP_CLASS& np)
-{
-  return read_PLY(is, output, np);
-}
-
-/// \cond SKIP_IN_MANUAL
-
-template <typename OutputIterator,
-          typename ... PropertyHandler>
-CGAL_DEPRECATED bool read_ply_points_with_properties(std::istream& is, OutputIterator output, PropertyHandler&& ... properties)
-{
-  return read_PLY_with_properties<typename value_type_traits<OutputIterator>::type>(is, output, std::forward<PropertyHandler>(properties)...);
-}
-
-template <typename OutputIteratorValueType,
-          typename OutputIterator>
-CGAL_DEPRECATED bool read_ply_points(std::istream& is, OutputIterator output)
-{
-  return read_PLY<OutputIteratorValueType>(is, output, parameters::all_default());
-}
-
-// variant with default output iterator value type
-template <typename OutputIterator,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-CGAL_DEPRECATED bool read_ply_points(std::istream& is, OutputIterator output, const CGAL_BGL_NP_CLASS& np)
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, np);
-}
-
-// variant with default NP and output iterator value type
-template <typename OutputIterator>
-CGAL_DEPRECATED bool read_ply_points(std::istream& is, OutputIterator output)
-{
-  return read_PLY<typename value_type_traits<OutputIterator>::type>(is, output, parameters::all_default());
-}
-
-/// \endcond
-
-#endif // CGAL_NO_DEPRECATED_CODE
+} // namespace IO
 
 } // namespace CGAL
 

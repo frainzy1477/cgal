@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 {
   // read the input surface mesh
   Triangle_mesh tmesh;
-  OpenMesh::IO::read_mesh(tmesh, (argc>1)?argv[1]:"data/elephant.off");
+  OpenMesh::IO::read_mesh(tmesh, (argc>1)?argv[1]:CGAL::data_file_path("meshes/elephant.off"));
 
   if(!CGAL::is_triangle_mesh(tmesh))
   {
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
   // into a file readable using the CGAL Tmesh demo
   std::ofstream output("shortest_paths_OpenMesh.polylines.txt");
   vertex_iterator vit, vit_end;
-  for ( boost::tie(vit, vit_end) = vertices(tmesh);
+  for ( std::tie(vit, vit_end) = vertices(tmesh);
         vit != vit_end; ++vit)
   {
     std::vector<Traits::Point_3> points;

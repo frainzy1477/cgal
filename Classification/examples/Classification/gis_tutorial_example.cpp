@@ -188,17 +188,18 @@ using CTP = CGAL::Constrained_triangulation_plus_2<CDT>;
 
 int main (int argc, char** argv)
 {
+  const std::string fname = argc != 2 ? CGAL::data_file_path("points_3/b9_training.ply") : argv[1];
   if (argc != 2)
   {
     std::cerr << "Usage: " << argv[0] << " points.ply" << std::endl;
-    return EXIT_FAILURE;
+    std::cerr << "Running with default value " << fname << "\n";
   }
 
   ///////////////////////////////////////////////////////////////////
   //! [Init DSM]
 
   // Read points
-  std::ifstream ifile (argv[1], std::ios_base::binary);
+  std::ifstream ifile (fname, std::ios_base::binary);
   CGAL::Point_set_3<Point_3> points;
   ifile >> points;
   std::cerr << points.size() << " point(s) read" << std::endl;
@@ -217,8 +218,8 @@ int main (int argc, char** argv)
   Mesh dsm_mesh;
   CGAL::copy_face_graph (dsm, dsm_mesh);
   std::ofstream dsm_ofile ("dsm.ply", std::ios_base::binary);
-  CGAL::set_binary_mode (dsm_ofile);
-  CGAL::write_PLY (dsm_ofile, dsm_mesh);
+  CGAL::IO::set_binary_mode (dsm_ofile);
+  CGAL::IO::write_PLY (dsm_ofile, dsm_mesh);
   dsm_ofile.close();
 
   //! [Save DSM]
@@ -300,8 +301,8 @@ int main (int argc, char** argv)
 
   Mesh tin_colored_mesh;
 
-  Mesh::Property_map<Mesh::Face_index, CGAL::Color>
-    color_map = tin_colored_mesh.add_property_map<Mesh::Face_index, CGAL::Color>("f:color").first;
+  Mesh::Property_map<Mesh::Face_index, CGAL::IO::Color>
+    color_map = tin_colored_mesh.add_property_map<Mesh::Face_index, CGAL::IO::Color>("f:color").first;
 
   CGAL::copy_face_graph (tin_with_info, tin_colored_mesh,
                          CGAL::parameters::face_to_face_output_iterator
@@ -310,20 +311,20 @@ int main (int argc, char** argv)
                            {
                              // Color unassigned faces gray
                              if (ff.first->info() < 0)
-                               color_map[ff.second] = CGAL::Color(128, 128, 128);
+                               color_map[ff.second] = CGAL::IO::Color(128, 128, 128);
                              else
                              {
                                // Random color seeded by the component ID
                                CGAL::Random r (ff.first->info());
-                               color_map[ff.second] = CGAL::Color (r.get_int(64, 192),
+                               color_map[ff.second] = CGAL::IO::Color (r.get_int(64, 192),
                                                                    r.get_int(64, 192),
                                                                    r.get_int(64, 192));
                              }
                            })));
 
   std::ofstream tin_colored_ofile ("colored_tin.ply", std::ios_base::binary);
-  CGAL::set_binary_mode (tin_colored_ofile);
-  CGAL::write_PLY (tin_colored_ofile, tin_colored_mesh);
+  CGAL::IO::set_binary_mode (tin_colored_ofile);
+  CGAL::IO::write_PLY (tin_colored_ofile, tin_colored_mesh);
   tin_colored_ofile.close();
 
   //! [Save TIN with info]
@@ -415,8 +416,8 @@ int main (int argc, char** argv)
 
   // Save original DTM
   std::ofstream dtm_ofile ("dtm.ply", std::ios_base::binary);
-  CGAL::set_binary_mode (dtm_ofile);
-  CGAL::write_PLY (dtm_ofile, dtm_mesh);
+  CGAL::IO::set_binary_mode (dtm_ofile);
+  CGAL::IO::write_PLY (dtm_ofile, dtm_mesh);
   dtm_ofile.close();
 
   std::cerr << face_selection.size() << " face(s) are selected for removal" << std::endl;
@@ -439,8 +440,8 @@ int main (int argc, char** argv)
 
   // Save filtered DTM
   std::ofstream dtm_holes_ofile ("dtm_with_holes.ply", std::ios_base::binary);
-  CGAL::set_binary_mode (dtm_holes_ofile);
-  CGAL::write_PLY (dtm_holes_ofile, dtm_mesh);
+  CGAL::IO::set_binary_mode (dtm_holes_ofile);
+  CGAL::IO::write_PLY (dtm_holes_ofile, dtm_mesh);
   dtm_holes_ofile.close();
 
   // Get all holes
@@ -469,16 +470,16 @@ int main (int argc, char** argv)
     }
   }
 
-  // Fill all holes except the bigest (which is the outer hull of the mesh)
+  // Fill all holes except the biggest (which is the outer hull of the mesh)
   for (Mesh::Halfedge_index hi : holes)
     if (hi != outer_hull)
       CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole
-        (dtm_mesh, hi, CGAL::Emptyset_iterator(), CGAL::Emptyset_iterator());
+         (dtm_mesh, hi, CGAL::parameters::fairing_continuity(0));
 
   // Save DTM with holes filled
   std::ofstream dtm_filled_ofile ("dtm_filled.ply", std::ios_base::binary);
-  CGAL::set_binary_mode (dtm_filled_ofile);
-  CGAL::write_PLY (dtm_filled_ofile, dtm_mesh);
+  CGAL::IO::set_binary_mode (dtm_filled_ofile);
+  CGAL::IO::write_PLY (dtm_filled_ofile, dtm_mesh);
   dtm_filled_ofile.close();
 
   //! [Hole filling]
@@ -490,8 +491,8 @@ int main (int argc, char** argv)
   CGAL::Polygon_mesh_processing::isotropic_remeshing (faces(dtm_mesh), spacing, dtm_mesh);
 
   std::ofstream dtm_remeshed_ofile ("dtm_remeshed.ply", std::ios_base::binary);
-  CGAL::set_binary_mode (dtm_remeshed_ofile);
-  CGAL::write_PLY (dtm_remeshed_ofile, dtm_mesh);
+  CGAL::IO::set_binary_mode (dtm_remeshed_ofile);
+  CGAL::IO::write_PLY (dtm_remeshed_ofile, dtm_mesh);
   dtm_remeshed_ofile.close();
 
   //! [Remeshing]
@@ -556,7 +557,7 @@ int main (int argc, char** argv)
         double height_ratio = (height_at_query - bbox.zmin()) / (bbox.zmax() - bbox.zmin());
         colors = color_ramp.get(height_ratio);
       }
-      raster_ofile.write ((char*)(&colors), 3);
+      raster_ofile.write (reinterpret_cast<char*>(&colors), 3);
     }
 
   raster_ofile.close();
@@ -642,7 +643,7 @@ int main (int argc, char** argv)
   // Output to WKT file
   std::ofstream contour_ofile ("contour.wkt");
   contour_ofile.precision(18);
-  CGAL::write_multi_linestring_WKT (contour_ofile, polylines);
+  CGAL::IO::write_multi_linestring_WKT (contour_ofile, polylines);
   contour_ofile.close();
 
   //! [Contouring split]
@@ -669,7 +670,7 @@ int main (int argc, char** argv)
   }
 
   std::size_t nb_vertices
-    = std::accumulate (polylines.begin(), polylines.end(), 0u,
+    = std::accumulate (polylines.begin(), polylines.end(), std::size_t(0),
                        [](std::size_t size, const std::vector<Point_3>& poly) -> std::size_t
                        { return size + poly.size(); });
 
@@ -680,7 +681,7 @@ int main (int argc, char** argv)
   // Output to WKT file
   std::ofstream simplified_ofile ("simplified.wkt");
   simplified_ofile.precision(18);
-  CGAL::write_multi_linestring_WKT (simplified_ofile, polylines);
+  CGAL::IO::write_multi_linestring_WKT (simplified_ofile, polylines);
   simplified_ofile.close();
 
   //! [Contouring simplify]
@@ -690,11 +691,9 @@ int main (int argc, char** argv)
   //! [Classification]
 
   // Get training from input
-  Point_set::Property_map<int> training_map;
-  bool training_found;
-  std::tie (training_map, training_found) = points.property_map<int>("training");
+  std::optional<Point_set::Property_map<int>> training_map = points.property_map<int>("training");
 
-  if (training_found)
+  if (training_map.has_value())
   {
     std::cerr << "Classifying ground/vegetation/building" << std::endl;
 
@@ -717,7 +716,7 @@ int main (int argc, char** argv)
 
     // Train a random forest classifier
     Classification::ETHZ::Random_forest_classifier classifier (labels, features);
-    classifier.train (points.range(training_map));
+    classifier.train (points.range(training_map.value()));
 
     // Classify with graphcut regularization
     Point_set::Property_map<int> label_map = points.add_property_map<int>("labels").first;
@@ -731,12 +730,12 @@ int main (int argc, char** argv)
     // Evaluate
     std::cerr << "Mean IoU on training data = "
               << Classification::Evaluation(labels,
-                                            points.range(training_map),
+                                            points.range(training_map.value()),
                                             points.range(label_map)).mean_intersection_over_union() << std::endl;
 
     // Save the classified point set
-    std::ofstream classified_ofile ("classified.ply");
-    CGAL::set_binary_mode (classified_ofile);
+    std::ofstream classified_ofile ("classification_gis_tutorial.ply");
+    CGAL::IO::set_binary_mode (classified_ofile);
     classified_ofile << points;
     classified_ofile.close();
   }

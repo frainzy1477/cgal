@@ -19,7 +19,7 @@ respectively.
 
 \tparam SLDS is an optional parameter to specify the type of the spatial lock data structure.
         It must be a model of the `SurjectiveLockDataStructure` concept,
-        with `Object` being a `Point` (as defined below).
+        with `object` being a `Point` (as defined below).
         It is only used if the triangulation data structure used is concurrency-safe (i.e.\ when
         `TriangulationDataStructure_3::Concurrency_tag` is `Parallel_tag`).
         The default value is `Spatial_lock_grid_3<Tag_priority_blocking>` if
@@ -1304,6 +1304,26 @@ Finite_vertex_handles finite_vertex_handles() const;
 Points points() const;
 
 /*!
+* returns an array containing the vertices of `e`,
+* in the order of their indices `e.second` and `e.third`
+* in the cell `e.first`.
+*/
+std::array<Vertex_handle, 2> vertices(const Edge& e) const;
+
+/*!
+* returns an array containing the vertices of `f`,
+* in counterclockwise order on the face of `f.first`
+* opposite to vertex `f.first->vertex(f.second)`.
+*/
+std::array<Vertex_handle, 3> vertices(const Facet& f) const;
+
+/*!
+* returns an array containing the vertices of `c`,
+* in the same order as the indices in `c`.
+*/
+std::array<Vertex_handle, 4> vertices(const Cell_handle c) const;
+
+/*!
   returns a range of iterators over the cells intersected by a line segment
 */
 Segment_traverser_cell_handles segment_traverser_cell_handles() const;
@@ -1649,7 +1669,7 @@ OutputIterator
 finite_adjacent_vertices(Vertex_handle v, OutputIterator vertices) const;
 
 /*!
-Returns the degree of a vertex, that is, the number of incident vertices.
+Returns the degree of `v`, that is, the number of incident vertices.
 The infinite vertex is counted.
 \pre `v != Vertex_handle()`, `t.is_vertex(v)`.
 */
@@ -1720,12 +1740,6 @@ is_valid(Cell_handle c, bool verbose = false) const;
 /*!
 \name I/O
 
-\cgal provides an interface to Geomview for a 3D-triangulation,
-see Chapter \ref Chapter_Geomview on `Geomview_stream`.
-
-\code
-#include <CGAL/IO/Triangulation_geomview_ostream_3.h>
-\endcode
 
 The information in the `iostream` is: the dimension, the number of
 finite vertices, the non-combinatorial information about vertices

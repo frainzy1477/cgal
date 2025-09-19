@@ -39,7 +39,7 @@ struct Source {
 
 int main(int argc, char** argv)
 {
-  std::ifstream in((argc>1)?argv[1]:"cube.off");
+  std::ifstream in((argc>1)?argv[1]:CGAL::data_file_path("meshes/cube_poly.off"));
   Polyhedron P;
   in >> P;
   GraphTraits::vertex_descriptor vd = *(vertices(P).first);
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
   typedef boost::transform_iterator<Source<Polyhedron>,halfedge_around_target_iterator> adjacent_vertex_iterator;
 
   halfedge_around_target_iterator hb,he;
-  boost::tie(hb,he) = halfedges_around_target(halfedge(vd,P),P);
+  std::tie(hb,he) = halfedges_around_target(halfedge(vd,P),P);
   adjacent_vertex_iterator avib, avie;
   avib = boost::make_transform_iterator(hb, Source<Polyhedron>(P));
   avie = boost::make_transform_iterator(he, Source<Polyhedron>(P));

@@ -2,7 +2,7 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
 
-#include <boost/graph/breadth_first_search.hpp>
+#include <CGAL/boost/graph/breadth_first_search.h>
 
 #include <fstream>
 
@@ -17,16 +17,16 @@ typedef boost::graph_traits<Polyhedron>::vertex_iterator   vertex_iterator;
 int main(int argc, char** argv) {
 
   Polyhedron P;
-  std::ifstream in((argc>1)?argv[1]:"cube.off");
+  std::ifstream in((argc>1)?argv[1]:CGAL::data_file_path("meshes/cube_poly.off"));
   in >> P ;
 
   // associate indices to the vertices using the "id()" field of the vertex.
   vertex_iterator vb, ve;
   int index = 0;
 
-  // boost::tie assigns the first and second element of the std::pair
+  // std::tie assigns the first and second element of the std::pair
   // returned by boost::vertices to the variables vit and ve
-  for(boost::tie(vb,ve)=vertices(P); vb!=ve; ++vb ){
+  for(std::tie(vb,ve)=vertices(P); vb!=ve; ++vb ){
     vertex_descriptor  vd = *vb;
     vd->id() = index++;
   }
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
   // Here we start at an arbitrary vertex
   // Any other vertex could be the starting point
-  boost::tie(vb,ve)=vertices(P);
+  std::tie(vb,ve)=vertices(P);
   vertex_descriptor  vd = *vb;
 
   std::cout << "We compute distances to " << vd->point() << std::endl;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
 
   // Traverse all vertices and show at what distance they are
-  for(boost::tie(vb,ve)=vertices(P); vb!=ve; ++vb ){
+  for(std::tie(vb,ve)=vertices(P); vb!=ve; ++vb ){
     vd = *vb;
     std::cout <<  vd->point() << "  is " << distance[vd->id()] << " hops away" << std::endl;
   }

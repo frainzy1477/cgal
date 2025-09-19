@@ -1,7 +1,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include <CGAL/AABB_tree.h>
-#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_traits_3.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
@@ -20,14 +20,14 @@ typedef CGAL::Timer Timer;
 
 
 template <typename TriangleMesh>
-void triangle_mesh(const char* fname)
+void triangle_mesh(std::string fname)
 {
   typedef CGAL::AABB_face_graph_triangle_primitive<TriangleMesh> Primitive;
-  typedef CGAL::AABB_traits<K, Primitive> Traits;
+  typedef CGAL::AABB_traits_3<K, Primitive> Traits;
   typedef CGAL::AABB_tree<Traits> Tree;
 
   TriangleMesh tmesh;
-  if(!CGAL::read_polygon_mesh(fname, tmesh) || CGAL::is_triangle_mesh(tmesh))
+  if(!CGAL::IO::read_polygon_mesh(fname, tmesh) || !CGAL::is_triangle_mesh(tmesh))
   {
     std::cerr << "Invalid input." << std::endl;
     return;
@@ -51,12 +51,12 @@ Bbox_3 bbox(boost::graph_traits<Surface_mesh>::face_descriptor fd,
   return res;
 }
 
-void surface_mesh_cache_bbox(const char* fname)
+void surface_mesh_cache_bbox(std::string fname)
 {
   typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
   typedef Surface_mesh::Property_map<face_descriptor,Bbox_3> Bbox_pmap;
   typedef CGAL::AABB_face_graph_triangle_primitive<Surface_mesh> Primitive;
-  typedef CGAL::AABB_traits<K, Primitive,Bbox_pmap> Traits;
+  typedef CGAL::AABB_traits_3<K, Primitive,Bbox_pmap> Traits;
   typedef CGAL::AABB_tree<Traits> Tree;
 
   Surface_mesh tmesh;
@@ -83,13 +83,13 @@ void surface_mesh_cache_bbox(const char* fname)
 int main(int argc, char* argv[])
 {
   std::cout << "Polyhedron_3" << std::endl;
-  triangle_mesh<Polyhedron_3>((argc>1)?argv[1]:"data/tetrahedron.off");
+  triangle_mesh<Polyhedron_3>((argc>1)?argv[1]:CGAL::data_file_path("meshes/tetrahedron.off"));
 
   std::cout << "Surface_mesh" << std::endl;
-  triangle_mesh<Surface_mesh>((argc>1)?argv[1]:"data/tetrahedron.off");
+  triangle_mesh<Surface_mesh>((argc>1)?argv[1]:CGAL::data_file_path("meshes/tetrahedron.off"));
 
   std::cout << "Surface_mesh with cached Bbox_3" << std::endl;
-  surface_mesh_cache_bbox((argc>1)?argv[1]:"data/tetrahedron.off");
+  surface_mesh_cache_bbox((argc>1)?argv[1]:CGAL::data_file_path("meshes/tetrahedron.off"));
 
   return EXIT_SUCCESS;
 }

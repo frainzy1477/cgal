@@ -10,14 +10,18 @@
 #include <QSettings>
 #include <QHeaderView>
 #include <QClipboard>
+#include <QInputDialog>
 
 #include "ui_MainWindow.h"
 
 MainWindow::MainWindow(QWidget* parent)
-: CGAL::Qt::DemosMainWindow(parent)
+  : CGAL::Qt::DemosMainWindow(parent)
 {
   ui = new Ui::MainWindow;
   ui->setupUi(this);
+
+  this->addAboutDemo(":/cgal/AABB_demo/about.html");
+  this->addAboutCGAL();
 
   // saves some pointers from ui, for latter use.
   m_pViewer = ui->viewer;
@@ -153,9 +157,8 @@ void MainWindow::on_actionInside_points_triggered()
 {
   bool ok;
 
-  const unsigned int nb_points = (unsigned)
-    QInputDialog::getInt(nullptr, "#Points",
-    "#Points:",10000,1,100000000,9,&ok);
+  const unsigned int nb_points = static_cast<unsigned>(QInputDialog::getInt(nullptr, "#Points",
+    "#Points:",10000,1,100000000,9,&ok));
 
   if(!ok)
     return;
@@ -170,9 +173,8 @@ void MainWindow::on_actionPoints_in_interval_triggered()
 {
   bool ok;
 
-  const unsigned int nb_points = (unsigned)
-                QInputDialog::getInt(nullptr, "#Points",
-    "#Points:",10000,1,100000000,9,&ok);
+  const unsigned int nb_points = static_cast<unsigned>(QInputDialog::getInt(nullptr, "#Points",
+    "#Points:",10000,1,100000000,9,&ok));
 
   if(!ok)
     return;
@@ -198,9 +200,8 @@ void MainWindow::on_actionBoundary_segments_triggered()
 {
   bool ok;
 
-  const unsigned int nb_slices = (unsigned)
-    QInputDialog::getInt(nullptr, "#Slices",
-    "Slices:",100,1,1000000,8,&ok);
+  const unsigned int nb_slices = static_cast<unsigned>(QInputDialog::getInt(nullptr, "#Slices",
+    "Slices:",100,1,1000000,8,&ok));
 
   if(!ok)
     return;
@@ -215,9 +216,8 @@ void MainWindow::on_actionBoundary_points_triggered()
 {
   bool ok;
 
-  const unsigned int nb_points = (unsigned)
-    QInputDialog::getInt(nullptr, "#Points",
-    "Points:",1000,1,10000000,8,&ok);
+  const unsigned int nb_points = static_cast<unsigned>(QInputDialog::getInt(nullptr, "#Points",
+    "Points:",1000,1,10000000,8,&ok));
 
   if(!ok)
     return;
@@ -232,9 +232,8 @@ void MainWindow::on_actionEdge_points_triggered()
 {
   bool ok;
 
-  const unsigned int nb_points = (unsigned)
-    QInputDialog::getInt(nullptr, "#Points",
-    "Points:",1000,1,10000000,8,&ok);
+  const unsigned int nb_points = static_cast<unsigned>(QInputDialog::getInt(nullptr, "#Points",
+    "Points:",1000,1,10000000,8,&ok));
 
   if(!ok)
     return;
@@ -423,7 +422,3 @@ void MainWindow::on_actionCopy_snapshot_triggered()
   qb->setImage(snapshot);
   QApplication::restoreOverrideCursor();
 }
-
-
-
-

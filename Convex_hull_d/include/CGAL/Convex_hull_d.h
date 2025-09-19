@@ -26,7 +26,7 @@
 #define CGAL_DEPRECATED_HEADER "<CGAL/Convex_hull_d.h>"
 #define CGAL_DEPRECATED_MESSAGE_DETAILS \
   "The Triangulation package (see https://doc.cgal.org/latest/Triangulation) should be used instead."
-#include <CGAL/internal/deprecation_warning.h>
+#include <CGAL/Installation/internal/deprecation_warning.h>
 
 /*{\Manpage {Convex_hull_d}{R}{Convex Hulls}{C}}*/
 
@@ -627,7 +627,7 @@ public:
 
   bool is_valid(bool throw_exceptions = false) const;
   /*{\Mop checks the validity of the data structure.
-  If |throw_exceptions == thrue| then the program throws
+  If |throw_exceptions == true| then the program throws
   the following exceptions to inform about the problem.\\
   [[chull_has_center_on_wrong_side_of_hull_facet]] the hyperplane
   supporting a facet has the wrong orientation.\\
@@ -1304,7 +1304,7 @@ std::list< typename Convex_hull_d<R>::Simplex_handle >
 Convex_hull_d<R>::facets_visible_from(const Point_d& x)
 {
   std::list<Simplex_handle> visible_simplices;
-  int location = -1;                       // intialization is important
+  int location = -1;                       // initialization is important
   std::size_t num_of_visited_simplices = 0;     // irrelevant
   Facet_handle f;                          // irrelevant
 
@@ -1319,7 +1319,7 @@ Bounded_side Convex_hull_d<R>::bounded_side(const Point_d& x)
 {
   if ( is_dimension_jump(x) ) return ON_UNBOUNDED_SIDE;
   std::list<Simplex_handle> visible_simplices;
-  int location = -1;                       // intialization is important
+  int location = -1;                       // initialization is important
   std::size_t num_of_visited_simplices = 0;     // irrelevant
   Facet_handle f;
 

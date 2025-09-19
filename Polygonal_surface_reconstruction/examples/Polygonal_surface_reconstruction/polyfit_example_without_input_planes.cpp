@@ -52,13 +52,13 @@ typedef CGAL::Surface_mesh<Point>                                               
 * the surface model from the planes.
 */
 
-int main()
+int main(int argc, char* argv[])
 {
   Point_vector points;
 
   // Loads point set from a file.
-  const std::string input_file("data/cube.pwn");
-    std::ifstream input_stream(input_file.c_str());
+  const std::string input_file = (argc > 1) ? argv[1] : CGAL::data_file_path("points_3/cube.pwn");
+  std::ifstream input_stream(input_file.c_str());
   if (input_stream.fail()) {
     std::cerr << "failed open file \'" <<input_file << "\'" << std::endl;
     return EXIT_FAILURE;
@@ -68,8 +68,8 @@ int main()
 
   CGAL::Timer t;
   t.start();
-  if (!CGAL::read_points(input_file.c_str(), std::back_inserter(points),
-                         CGAL::parameters::point_map(Point_map()).normal_map(Normal_map())))
+  if (!CGAL::IO::read_points(input_file.c_str(), std::back_inserter(points),
+                             CGAL::parameters::point_map(Point_map()).normal_map(Normal_map())))
   {
     std::cerr << "Error: cannot read file " << input_file << std::endl;
     return EXIT_FAILURE;
@@ -125,8 +125,8 @@ int main()
     return EXIT_FAILURE;
   }
 
-  const std::string& output_file("data/cube_result.off");
-  if (CGAL::write_OFF(output_file, model))
+  const std::string& output_file("without_input_planes_result.off");
+  if (CGAL::IO::write_OFF(output_file, model))
     std::cout << " Done. Saved to " << output_file << ". Time: " << t.time() << " sec." << std::endl;
   else {
     std::cerr << " Failed saving file." << std::endl;
@@ -138,9 +138,9 @@ int main()
   // Also stores the candidate faces as a surface mesh to a file
   Surface_mesh candidate_faces;
   algo.output_candidate_faces(candidate_faces);
-  const std::string& candidate_faces_file("data/cube_candidate_faces.off");
+  const std::string& candidate_faces_file("without_input_planes_cube_candidate_faces.off");
   std::ofstream candidate_stream(candidate_faces_file.c_str());
-  if (CGAL::write_OFF(candidate_stream, candidate_faces))
+  if (CGAL::IO::write_OFF(candidate_stream, candidate_faces))
     std::cout << "Candidate faces saved to " << candidate_faces_file << "." << std::endl;
 
   return EXIT_SUCCESS;

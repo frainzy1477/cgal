@@ -25,7 +25,7 @@
 #include <cmath> // for HUGE_VAL
 #endif
 
-// This file specifies some platform dependant functions, regarding the FPU
+// This file specifies some platform dependent functions, regarding the FPU
 // directed rounding modes.  There is only support for double precision.
 //
 // It also contains the definition of the Protect_FPU_rounding<> class,
@@ -143,8 +143,8 @@ inline double IA_opacify(double x)
 {
 #ifdef __llvm__
   // LLVM's support for inline asm is completely messed up:
-  // http://llvm.org/bugs/show_bug.cgi?id=17958
-  // http://llvm.org/bugs/show_bug.cgi?id=17959
+  // https://bugs.llvm.org/show_bug.cgi?id=17958
+  // https://bugs.llvm.org/show_bug.cgi?id=17959
   // etc.
   // This seems to produce code that is ok (not optimal but better than
   // volatile). In case of trouble, use volatile instead.
@@ -166,13 +166,13 @@ inline double IA_opacify(double x)
   // Intel used not to emulate this perfectly, we'll see.
   // If we create a version of IA_opacify for vectors, note that gcc < 4.8
   // fails with "+g" and we need to use "+mx" instead.
-  // "+X" ICEs ( http://gcc.gnu.org/bugzilla/show_bug.cgi?id=59155 ) and
+  // "+X" ICEs ( https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59155 ) and
   // may not be safe?
   // The constraint 'g' doesn't include floating point registers ???
   // Intel has a bug where -mno-sse still defines __SSE__ and __SSE2__
   // (-mno-sse2 works though), no work-around for now.
 # if defined __SSE2_MATH__ || (defined __INTEL_COMPILER && defined __SSE2__)
-#  if __GNUC__ * 100 + __GNUC_MINOR__ >= 409
+#  if (__GNUC__ > 0)
   // ICEs in reload/LRA with older versions.
   asm volatile ("" : "+gx"(x) );
 #  else
@@ -180,10 +180,10 @@ inline double IA_opacify(double x)
 #  endif
 # elif (defined __i386__ || defined __x86_64__)
   // "+f" doesn't compile on x86(_64)
-  // ( http://gcc.gnu.org/bugzilla/show_bug.cgi?id=59157 )
-  // Don't mix "t" with "g": http://gcc.gnu.org/bugzilla/show_bug.cgi?id=59180
+  // ( https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59157 )
+  // Don't mix "t" with "g": https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59180
   // We can't put "t" with "x" either, prefer "x" for -mfpmath=sse,387.
-  // ( http://gcc.gnu.org/bugzilla/show_bug.cgi?id=59181 )
+  // ( https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59181 )
   asm volatile ("" : "+mt"(x) );
 # elif (defined __VFP_FP__ && !defined __SOFTFP__) || defined __aarch64__
   // ARM
@@ -217,7 +217,7 @@ inline double IA_force_to_double(double x)
 #if defined __GNUG__
 #  ifdef CGAL_HAS_SSE2
   // For an explanation of volatile:
-  // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56027
+  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56027
   asm volatile ("" : "+mx"(x) );
 #  else
   // Similar to writing to a volatile and reading back, except that calling
@@ -248,6 +248,8 @@ inline __m128d IA_opacify128(__m128d x)
 #  ifdef _MSC_VER
   // With VS, __m128d is a union, where volatile doesn't disappear automatically
   // However, this version generates wrong code with clang, check before enabling it for more compilers.
+  // The usage here is safe as we write from a __m128d to a __m128d
+  // and we know that this type has 16 bytes
   std::memcpy(&x, (void*)&e, 16);
   return x;
 #  else
@@ -275,9 +277,8 @@ inline __m128d IA_opacify128_weak(__m128d x)
 inline __m128d swap_m128d(__m128d x){
 # ifdef __llvm__
   return __builtin_shufflevector(x, x, 1, 0);
-# elif defined __GNUC__ && !defined __INTEL_COMPILER \
-  && __GNUC__ * 100 + __GNUC_MINOR__ >= 407
-  return __builtin_shuffle(x, (__m128i){ 1, 0 });
+# elif defined __GNUC__ && !defined __INTEL_COMPILER
+  return __extension__ __builtin_shuffle(x, (__m128i){ 1, 0 });
 # else
   return _mm_shuffle_pd(x, x, 1);
 # endif
@@ -327,11 +328,6 @@ inline double IA_bug_sqrt(double d)
 }
 
 #  define CGAL_BUG_SQRT(d) IA_bug_sqrt(d)
-
-
-#elif defined __SSE2_MATH__
-// For SSE2, we need to call __builtin_sqrt() instead of libc's sqrt().
-#  define CGAL_BUG_SQRT(d) __builtin_sqrt(d)
 #elif defined __CYGWIN__
 inline double IA_bug_sqrt(double d)
 {
@@ -460,7 +456,7 @@ typedef unsigned int FPU_CW_t;
 # elif defined  __aarch64__
 #define CGAL_IA_SETFPCW(CW) asm volatile ("MSR FPCR, %0" : :"r" (CW))
 #define CGAL_IA_GETFPCW(CW) asm volatile ("MRS %0, FPCR" : "=r" (CW))
-typedef unsigned int FPU_CW_t;
+typedef unsigned long FPU_CW_t;
 #define CGAL_FE_TONEAREST    (0x0)
 #define CGAL_FE_TOWARDZERO   (0xC00000)
 #define CGAL_FE_UPWARD       (0x400000)
@@ -504,6 +500,7 @@ void
 FPU_set_cw (FPU_CW_t cw)
 {
 #ifdef CGAL_ALWAYS_ROUND_TO_NEAREST
+  CGAL_USE(cw);
   CGAL_assertion(cw == CGAL_FE_TONEAREST);
 #else
   CGAL_IA_SETFPCW(cw);
@@ -515,6 +512,7 @@ FPU_CW_t
 FPU_get_and_set_cw (FPU_CW_t cw)
 {
 #ifdef CGAL_ALWAYS_ROUND_TO_NEAREST
+    CGAL_USE(cw);
     CGAL_assertion(cw == CGAL_FE_TONEAREST);
     return CGAL_FE_TONEAREST;
 #else
@@ -620,6 +618,7 @@ inline double IA_sqrt_toward_zero(double d) {
 #ifdef CGAL_ALWAYS_ROUND_TO_NEAREST
   return (d > 0.0) ? nextafter(std::sqrt(d), 0.) : 0.0;
 #else
+  CGAL_assertion(FPU_get_cw()==CGAL_FE_UPWARD);
   FPU_set_cw(CGAL_FE_DOWNWARD);
   double i = (d > 0.0) ? CGAL_IA_FORCE_TO_DOUBLE(CGAL_BUG_SQRT(CGAL_IA_STOP_CPROP(d))) : 0.0;
   FPU_set_cw(CGAL_FE_UPWARD);
@@ -630,7 +629,9 @@ inline double IA_sqrt_toward_zero(double d) {
 } //namespace CGAL
 
 #ifdef CGAL_HEADER_ONLY
+#ifndef CGAL_DISABLE_ROUNDING_MATH_CHECK
 #include <CGAL/test_FPU_rounding_mode_impl.h>
+#endif
 #endif // CGAL_HEADER_ONLY
 
 #endif // CGAL_FPU_H

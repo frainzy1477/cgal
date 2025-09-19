@@ -119,7 +119,7 @@ MainWindow::loadPoints()
   for (int i=0 ; i<8 ; i++) {
     cx += dom[i].x();
     cy += dom[i].y();
-    cy += dom[i].y();
+    cz += dom[i].z();
   }
   CGAL::qglviewer::Vec center(cx/8.,cy/8.,cz/8.);
   viewer->setSceneCenter(center);
@@ -170,7 +170,7 @@ MainWindow::newPoints(int n)
   scene.periodic_triangulation.clear();
   scene.points.clear();
 
-  CGAL::Random rnd(std::time(NULL));
+  CGAL::Random rnd(std::time(nullptr));
   CGAL::Random_points_in_cube_3<Point_3, Creator> in_cube(1,rnd);
 
   for (int i=0 ; i<n ; i++)
@@ -188,7 +188,7 @@ MainWindow::newPoints(int n)
   for (int i=0 ; i<8 ; i++) {
     cx += dom[i].x();
     cy += dom[i].y();
-    cy += dom[i].y();
+    cz += dom[i].z();
   }
   CGAL::qglviewer::Vec center(cx/8.,cy/8.,cz/8.);
   viewer->setSceneCenter(center);
@@ -204,7 +204,7 @@ MainWindow::newPoints(int n)
 }
 
 void MainWindow::help() {
-  QString app = QLibraryInfo::location(QLibraryInfo::BinariesPath)
+  QString app = QLibraryInfo::path(QLibraryInfo::BinariesPath)
     + QDir::separator();
 #if !defined(Q_OS_MAC)
   app += QString("assistant");
@@ -223,5 +223,3 @@ void MainWindow::help() {
       tr("Could not start Qt Assistant from %1.").arg(app));
   }
 }
-
-

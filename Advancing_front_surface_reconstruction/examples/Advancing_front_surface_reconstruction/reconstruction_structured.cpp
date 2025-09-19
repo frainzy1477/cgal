@@ -111,12 +111,12 @@ int main (int argc, char* argv[])
   // Points with normals.
   Pwn_vector points;
 
-  const char* fname = (argc>1) ? argv[1] : "data/cube.pwn";
+  const std::string fname = (argc>1) ? argv[1] : CGAL::data_file_path("points_3/cube.pwn");
   // Loading point set from a file.
 
-  if (!CGAL::read_points(fname, std::back_inserter(points),
-                         CGAL::parameters::point_map(Point_map()).
-                                           normal_map(Normal_map())))
+  if (!CGAL::IO::read_points(fname, std::back_inserter(points),
+                             CGAL::parameters::point_map(Point_map()).
+                                               normal_map(Normal_map())))
   {
       std::cerr << "Error: cannot read file" << std::endl;
       return EXIT_FAILURE;
@@ -126,7 +126,7 @@ int main (int argc, char* argv[])
 
   Efficient_ransac ransac;
   ransac.set_input(points);
-  ransac.add_shape_factory<Plane>(); // Only planes are useful for stucturing
+  ransac.add_shape_factory<Plane>(); // Only planes are useful for structuring
 
   // Default RANSAC parameters
   Efficient_ransac::Parameters op;

@@ -73,7 +73,7 @@ public:
     }
     else
     {
-      out() << '\n' << oformat(x) << ' ' << oformat(y) << ' ' << oformat(z);
+      out() << '\n' << IO::oformat(x) << ' ' << IO::oformat(y) << ' ' << IO::oformat(z);
     }
   }
 
@@ -87,7 +87,7 @@ public:
     }
     else
     {
-      out() << ' ' << ' ' << oformat(x) << ' ' << oformat(y) << ' ' << oformat(z);
+      out() << ' ' << ' ' << IO::oformat(x) << ' ' << IO::oformat(y) << ' ' << IO::oformat(z);
     }
   }
 
@@ -101,7 +101,7 @@ public:
     }
     else
     {
-      out() << ' ' << ' ' << oformat(r) << ' ' << oformat(g) << ' ' << oformat(b);
+      out() << ' ' << ' ' << IO::oformat(r) << ' ' << IO::oformat(g) << ' ' << IO::oformat(b);
     }
   }
 
@@ -114,7 +114,7 @@ public:
     }
     else
     {
-      out() << ' ' << ' ' << oformat(tx) << ' ' << oformat(ty);
+      out() << ' ' << ' ' << IO::oformat(tx) << ' ' << IO::oformat(ty);
     }
   }
 
@@ -129,7 +129,7 @@ public:
   void write_facet_begin(std::size_t no)
   {
     if(m_header.binary())
-      I_Binary_write_big_endian_integer32(out(), static_cast<boost::int32_t>(no));
+      I_Binary_write_big_endian_integer32(out(), static_cast<std::int32_t>(no));
     else
       out() << no << ' ';
   }
@@ -137,7 +137,7 @@ public:
   void write_facet_vertex_index(std::size_t index)
   {
     if(m_header.binary())
-      I_Binary_write_big_endian_integer32(out(), static_cast<boost::int32_t>(index));
+      I_Binary_write_big_endian_integer32(out(), static_cast<std::int32_t>(index));
     else
       out() << ' ' << index;
   }

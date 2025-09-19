@@ -22,32 +22,35 @@
 #  endif
 #endif
 
-#include <vector>
-#include <deque>
-#include <algorithm>
-#include <cmath>
-#include <iterator>
-
 #include <CGAL/IO/trace.h>
 #include <CGAL/Reconstruction_triangulation_3.h>
 #include <CGAL/spatial_sort.h>
+
 #ifdef CGAL_EIGEN3_ENABLED
-#include <CGAL/Eigen_solver_traits.h>
-#else
+ #include <CGAL/Eigen_solver_traits.h>
 #endif
+
 #include <CGAL/centroid.h>
 #include <CGAL/property_map.h>
-#include <CGAL/surface_reconstruction_points_assertions.h>
+#include <CGAL/assertions.h>
 #include <CGAL/poisson_refine_triangulation.h>
-#include <CGAL/Robust_circumcenter_filtered_traits_3.h>
+#include <CGAL/Robust_weighted_circumcenter_filtered_traits_3.h>
 #include <CGAL/compute_average_spacing.h>
 #include <CGAL/Timer.h>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/array.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/utility/enable_if.hpp>
+#ifdef CGAL_LINKED_WITH_TBB
+ #include <tbb/enumerable_thread_specific.h>
+#endif
+
 #include <boost/iterator/indirect_iterator.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <deque>
+#include <iterator>
+#include <memory>
+#include <type_traits>
+#include <vector>
 
 /*!
   \file Poisson_reconstruction_function.h
@@ -147,7 +150,7 @@ Delaunay triangulation instead of an adaptive octree.
 
 \tparam Gt Geometric traits class.
 
-\cgalModels `ImplicitFunction`
+\cgalModels{ImplicitFunction}
 
 */
 template <class Gt>
@@ -262,7 +265,10 @@ private:
 
     Cell_handle get() const
     {
-      return Triangulation_data_structure::Cell_range::s_iterator_to(*m_cell);
+      if(m_cell == nullptr)
+        return {};
+      else
+        return Triangulation_data_structure::Cell_range::s_iterator_to(*m_cell);
     }
     void set (Cell_handle ch) { m_cell = ch.operator->(); }
   };
@@ -274,17 +280,23 @@ private:
 
   // operator() is pre-computed on vertices of *m_tr by solving
   // the Poisson equation Laplacian(f) = divergent(normals field).
-  boost::shared_ptr<Triangulation> m_tr;
+  std::shared_ptr<Triangulation> m_tr;
   mutable std::shared_ptr<std::vector<Cached_bary_coord> > m_bary;
   mutable std::vector<Point> Dual;
   mutable std::vector<Vector> Normal;
 
   // contouring and meshing
   Point m_sink; // Point with the minimum value of operator()
-  mutable Cell_hint m_hint; // last cell found = hint for next search
+
+#ifdef CGAL_LINKED_WITH_TBB
+  mutable tbb::enumerable_thread_specific<Cell_handle> m_hint;
+  Cell_handle& get_hint() const { return m_hint.local(); }
+#else
+  mutable Cell_handle m_hint;
+  Cell_handle& get_hint() const { return m_hint; }
+#endif
 
   FT average_spacing;
-
 
   /// function to be used for the different constructors available that are
   /// doing the same thing but with default template parameters
@@ -380,9 +392,9 @@ public:
     InputIterator first,  ///< iterator over the first input point.
     InputIterator beyond, ///< past-the-end iterator over the input points.
     NormalPMap normal_pmap, ///< property map: `value_type of InputIterator` -> `Vector` (the *oriented* normal of an input point).
-    typename boost::enable_if<
-      boost::is_convertible<typename std::iterator_traits<InputIterator>::value_type, Point>
-    >::type* = 0
+    std::enable_if_t<
+      std::is_convertible<typename std::iterator_traits<InputIterator>::value_type, Point>::value
+    >* = 0
   )
     : m_tr(new Triangulation), m_bary(new std::vector<Cached_bary_coord>)
   , average_spacing(CGAL::compute_average_spacing<CGAL::Sequential_tag>(CGAL::make_range(first, beyond), 6))
@@ -448,7 +460,7 @@ public:
       // Add a pass of Delaunay refinement.
       //
       // In that pass, the sizing field, of the refinement process of the
-      // triangulation, is based on the result of a poisson function with a
+      // triangulation, is based on the result of a Poisson function with a
       // sample of the input points. The ratio is 'approximation_ratio'.
       //
       // For optimization reasons, the cell criteria of the refinement
@@ -586,25 +598,24 @@ public:
   }
 #endif
 
-  boost::tuple<FT, Cell_handle, bool> special_func(const Point& p) const
+  std::tuple<FT, Cell_handle, bool> special_func(const Point& p) const
   {
-    Cell_handle hint = m_hint.get();
-    hint = m_tr->locate(p, hint); // no hint when we use hierarchy
-    m_hint.set(hint);
+    Cell_handle& hint = get_hint();
+    hint = m_tr->locate(p, hint);
 
     if(m_tr->is_infinite(hint)) {
       int i = hint->index(m_tr->infinite_vertex());
-      return boost::make_tuple(hint->vertex((i+1)&3)->f(),
-                               hint, true);
+      return std::make_tuple(hint->vertex((i+1)&3)->f(),
+                             hint, true);
     }
 
     FT a,b,c,d;
     barycentric_coordinates(p,hint,a,b,c,d);
-    return boost::make_tuple(a * hint->vertex(0)->f() +
-                             b * hint->vertex(1)->f() +
-                             c * hint->vertex(2)->f() +
-                             d * hint->vertex(3)->f(),
-                             hint, false);
+    return std::make_tuple(a * hint->vertex(0)->f() +
+                           b * hint->vertex(1)->f() +
+                           c * hint->vertex(2)->f() +
+                           d * hint->vertex(3)->f(),
+                           hint, false);
   }
   /// \endcond
 
@@ -615,9 +626,8 @@ public:
   */
   FT operator()(const Point& p) const
   {
-    Cell_handle hint = m_hint.get();
+    Cell_handle& hint = get_hint();
     hint = m_tr->locate(p, hint);
-    m_hint.set(hint);
 
     if(m_tr->is_infinite(hint)) {
       int i = hint->index(m_tr->infinite_vertex());
@@ -763,14 +773,13 @@ private:
   /// Poisson reconstruction.
   /// Returns false on error.
   ///
-  /// @commentheading Template parameters:
-  /// @param SparseLinearAlgebraTraits_d Symmetric definite positive sparse linear solver.
+  /// @tparam SparseLinearAlgebraTraits_d Symmetric definite positive sparse linear solver.
   template <class SparseLinearAlgebraTraits_d>
   bool solve_poisson(
     SparseLinearAlgebraTraits_d solver, ///< sparse linear solver
     double lambda)
   {
-    CGAL_TRACE("Calls solve_poisson()\n");
+    CGAL_TRACE_STREAM << "Calls solve_poisson()\n";
 
     double time_init = clock();
 
@@ -786,7 +795,7 @@ private:
     m_tr->index_unconstrained_vertices();
     unsigned int nb_variables = static_cast<unsigned int>(m_tr->number_of_vertices()-1);
 
-    CGAL_TRACE("  Number of variables: %ld\n", (long)(nb_variables));
+    CGAL_TRACE_STREAM  << "  Number of variables: " <<  nb_variables << std::endl;
 
     // Assemble linear system A*X=B
     typename SparseLinearAlgebraTraits_d::Matrix A(nb_variables); // matrix is symmetric definite positive
@@ -815,19 +824,19 @@ private:
     clear_duals();
     clear_normals();
     duration_assembly = (clock() - time_init)/CLOCKS_PER_SEC;
-    CGAL_TRACE("  Creates matrix: done (%.2lf s)\n", duration_assembly);
+    CGAL_TRACE_STREAM << "  Creates matrix: done (" << duration_assembly << "sec.)\n";
 
-    CGAL_TRACE("  Solve sparse linear system...\n");
+    CGAL_TRACE_STREAM << "  Solve sparse linear system...\n";
 
     // Solve "A*X = B". On success, solution is (1/D) * X.
     time_init = clock();
     double D;
     if(!solver.linear_solver(A, B, X, D))
       return false;
-    CGAL_surface_reconstruction_points_assertion(D == 1.0);
+    CGAL_assertion(D == 1.0);
     duration_solve = (clock() - time_init)/CLOCKS_PER_SEC;
 
-    CGAL_TRACE("  Solve sparse linear system: done (%.2lf s)\n", duration_solve);
+    CGAL_TRACE_STREAM << "  Solve sparse linear system: done (" << duration_solve << "sec.)\n";
 
     // copy function's values to vertices
     unsigned int index = 0;
@@ -835,7 +844,7 @@ private:
       if(!m_tr->is_constrained(v))
         v->f() = X[index++];
 
-    CGAL_TRACE("End of solve_poisson()\n");
+    CGAL_TRACE_STREAM << "End of solve_poisson()\n";
 
     return true;
   }
@@ -1130,7 +1139,7 @@ private:
 
     if(voronoi_points.size() < 3)
     {
-      CGAL_surface_reconstruction_points_assertion(false);
+      CGAL_assertion(false);
       return 0.0;
     }
 
@@ -1203,8 +1212,7 @@ private:
 
   /// Assemble vi's row of the linear system A*X=B
   ///
-  /// @commentheading Template parameters:
-  /// @param SparseLinearAlgebraTraits_d Symmetric definite positive sparse linear solver.
+  /// @tparam SparseLinearAlgebraTraits_d Symmetric definite positive sparse linear solver.
   template <class SparseLinearAlgebraTraits_d>
   void assemble_poisson_row(typename SparseLinearAlgebraTraits_d::Matrix& A,
                             Vertex_handle vi,

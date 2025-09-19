@@ -5,7 +5,7 @@
 //
 // $URL$
 // $Id$
-// SPDX-License-Identifier: LGPL-3.0-or-later OR LicenseRef-Commercial
+// SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-Commercial
 //
 //
 // Author(s)     : Eric Berberich <eric@mpi-inf.mpg.de>
@@ -13,6 +13,9 @@
 
 #ifndef CGAL_CURVED_KERNEL_VIA_ANALYSIS_2_FUNCTORS_H
 #define CGAL_CURVED_KERNEL_VIA_ANALYSIS_2_FUNCTORS_H
+
+#include <CGAL/license/Arrangement_on_surface_2.h>
+
 
 /*!\file include/CGAL/Curved_kernel_via_analysis_2/Curved_kernel_via_analysis_2_functors.h
  * \brief defines Curved_kernel_via_analysis_2 function objects + class
@@ -231,7 +234,7 @@ public:
         // avoid compiler warning
         (void)arc;
 
-        //CGAL::set_pretty_mode(std::cerr);
+        //CGAL::IO::set_pretty_mode(std::cerr);
         CERR("Construct_pt_on_arc: " << CGAL::to_double(x) << ", " << arcno <<
              ", " << c.id() <<  "\narc = " << arc << "\n");
 
@@ -945,7 +948,7 @@ public:
 };
 
 /*!\brief
- * Functor that computes the relative vertical aligment of two arcs left
+ * Functor that computes the relative vertical alignment of two arcs left
  * of a point
  */
 template < class CurvedKernelViaAnalysis_2 >
@@ -1056,7 +1059,7 @@ public:
 
 
 /*!\brief
- * Functor that computes the relative vertical aligment of two arcs right
+ * Functor that computes the relative vertical alignment of two arcs right
  * of a point
  */
 template < class CurvedKernelViaAnalysis_2 >
@@ -1426,7 +1429,7 @@ public:
 
     typedef unsigned int                              Multiplicity;
     typedef std::pair<Point_2, Multiplicity>          Intersection_point;
-    typedef boost::variant<Intersection_point, Arc_2> Intersection_result;
+    typedef std::variant<Intersection_point, Arc_2> Intersection_result;
 
     //! the result type
     typedef CGAL::cpp98::iterator<std::output_iterator_tag, Intersection_result>
@@ -1469,13 +1472,13 @@ public:
         // point-wise intersections
         std::vector<Arc_2> arcs;
         if (cv1._trim_if_overlapped(cv2, std::back_inserter(arcs))) {
-            for (const auto& item : arcs) *oi++ = Intersection_result(item);
+            for (const auto& item : arcs) *oi++ = item;
             return oi;
         }
         // process non-ov erlapping case
         std::vector<Intersection_point> vec;
         Arc_2::_intersection_points(cv1, cv2, std::back_inserter(vec));
-        for (const auto& item : vec) *oi++ = Intersection_result(item);
+        for (const auto& item : vec) *oi++ = item;
         return oi;
     }
 
@@ -1905,7 +1908,7 @@ public:
   {
     typedef typename Curved_kernel_via_analysis_2::Point_2      Point_2;
     typedef typename Curved_kernel_via_analysis_2::Arc_2        Arc_2;
-    typedef boost::variant<Point_2, Arc_2>      Make_x_monotone_result;
+    typedef std::variant<Point_2, Arc_2>      Make_x_monotone_result;
     *oi++ = Make_x_monotone_result(cv);
     return oi;
   }
@@ -1932,7 +1935,7 @@ public:
   /*!\brief
    * Splits an input object \c obj into x-monotone arcs and isolated points
    *
-   * \param obj the polymorph input object: can represet \c Point_2,
+   * \param obj the polymorph input object: can represent \c Point_2,
    * \c Arc_2, \c Non_x_monotone_arc_2 or \c Curve_analysis_2
    * \param oi Output iterator that stores CGAL::Object, which either
    *           encapsulates \c Point_2 or \c Arc_2
@@ -1945,7 +1948,7 @@ public:
     typedef typename Curved_kernel_via_analysis_2::Arc_2        Arc_2;
     typedef typename Curved_kernel_via_analysis_2::Non_x_monotone_arc_2
       Non_x_monotone_arc_2;
-    typedef boost::variant<Point_2, Arc_2>
+    typedef std::variant<Point_2, Arc_2>
       Make_x_monotone_result;
 
     Curve_analysis_2 curve;
@@ -2214,7 +2217,7 @@ public:
  * Functor that compares x-limits at the top or bottom boundary
  */
 template < class CurvedKernelViaAnalysis_2 >
-class Compare_x_at_limit_2 : public
+class Compare_x_on_boundary_2 : public
 Curved_kernel_via_analysis_2_functor_base< CurvedKernelViaAnalysis_2 > {
 
 public:
@@ -2233,7 +2236,7 @@ public:
 
     //! the arity of the functor
 
-    Compare_x_at_limit_2(Curved_kernel_via_analysis_2 *kernel) :
+    Compare_x_on_boundary_2(Curved_kernel_via_analysis_2 *kernel) :
         Base(kernel) {
     }
 
@@ -2257,7 +2260,7 @@ public:
                            CGAL::Arr_curve_end ce) const {
 
 
-        CERR("\ncompare_x_at_limit: p: " << p << "\n cv: " <<
+        CERR("\ncompare_x_on_boundary: p: " << p << "\n cv: " <<
              cv << "; curve_end: " << ce << "\n");
 
         // this curve end has boundary only in y
@@ -2295,7 +2298,7 @@ public:
     result_type operator()(const Arc_2& cv1, CGAL::Arr_curve_end ce1,
                            const Arc_2& cv2, CGAL::Arr_curve_end ce2) const {
 
-        CERR("\ncompare_x_at_limit: cv1: " << cv1 << "\n cv2: " <<
+        CERR("\ncompare_x_on_boundary: cv1: " << cv1 << "\n cv2: " <<
             cv2 << "; end1: " << ce1 << "; end2: " << ce2 << "\n");
         /*CGAL::Arr_boundary_type bnd1 = boundary(end1),
             bnd2 = cv2.boundary(ce2);*/
@@ -2325,7 +2328,7 @@ public:
  * Functor that compares x-coordinates near the top or bottom boundary
  */
 template < class CurvedKernelViaAnalysis_2 >
-class Compare_x_near_limit_2 : public
+class Compare_x_near_boundary_2 : public
 Curved_kernel_via_analysis_2_functor_base< CurvedKernelViaAnalysis_2 > {
 
 public:
@@ -2344,7 +2347,7 @@ public:
 
     //! the arity of the functor
 
-    Compare_x_near_limit_2(Curved_kernel_via_analysis_2 *kernel) :
+    Compare_x_near_boundary_2(Curved_kernel_via_analysis_2 *kernel) :
         Base(kernel) {
     }
 
@@ -2367,7 +2370,7 @@ public:
     result_type operator()(const Arc_2& cv1, const Arc_2& cv2,
                            CGAL::Arr_curve_end ce) const {
 
-        CERR("\ncompare_x_near_limit: cv1: " << cv1 << "\n cv2: " <<
+        CERR("\ncompare_x_near_boundary: cv1: " << cv1 << "\n cv2: " <<
             cv2 << "; ce: " << ce << "\n");
 
         CGAL::Arr_parameter_space loc1 = cv1.location(ce);
@@ -2375,7 +2378,7 @@ public:
                                cv2.location(ce));
         CGAL_precondition(cv1.is_on_bottom_top(loc1));
         CGAL_precondition(cv1.is_on_bottom_top(loc2));
-        CGAL_precondition(cv1.compare_x_at_limit(ce, cv2, ce) == CGAL::EQUAL);
+        CGAL_precondition(cv1.compare_x_on_boundary(ce, cv2, ce) == CGAL::EQUAL);
 
         CGAL_precondition(loc1 == loc2);
 
@@ -2717,10 +2720,10 @@ public:
     // bottom-top
     CGAL_CKvA_2_functor_pred(Parameter_space_in_y_2,
                              parameter_space_in_y_2_object);
-    CGAL_CKvA_2_functor_pred(Compare_x_at_limit_2,
-                             compare_x_at_limit_2_object);
-    CGAL_CKvA_2_functor_pred(Compare_x_near_limit_2,
-                             compare_x_near_limit_2_object);
+    CGAL_CKvA_2_functor_pred(Compare_x_on_boundary_2,
+                             compare_x_on_boundary_2_object);
+    CGAL_CKvA_2_functor_pred(Compare_x_near_boundary_2,
+                             compare_x_near_boundary_2_object);
 
     CGAL_CKvA_2_functor_cons(X_extreme_points_2, x_extreme_points_2_object);
     CGAL_CKvA_2_functor_cons(Y_extreme_points_2, y_extreme_points_2_object);

@@ -25,9 +25,11 @@
 
 #include <boost/cstdint.hpp>
 
+#include <vector>
 #include <cstddef>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 namespace CGAL {
 
@@ -37,6 +39,7 @@ class File_scanner_OFF
   std::vector<double> entries;
   std::size_t color_entries;
   std::size_t first_color_index;
+  std::string line;
   std::istream& m_in;
   bool normals_read;
 
@@ -78,7 +81,7 @@ public:
     else
     {
       skip_comment();
-      std::string line;
+      line.clear();
       std::getline(m_in, line);
       // First remove the comment if there is one
       std::size_t pos = line.find('#');
@@ -90,7 +93,7 @@ public:
       std::istringstream issline(line);
       entries.clear();
       double d;
-      while(issline >> iformat(d)){
+      while(issline >> IO::iformat(d)){
         entries.push_back(d);
       }
 
@@ -372,163 +375,163 @@ public:
     z = static_cast<int>(dz);
   }
 
-  static const Color& get_indexed_color(int id)
+  static const IO::Color& get_indexed_color(int id)
   {
-    static const Color color[149] = {
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(178, 38, 25, 191),
-      Color(51, 51, 204, 191),
-      Color(229, 153, 5, 191),
-      Color(25, 76, 204, 191),
-      Color(25, 178, 51, 191),
-      Color(204, 204, 102, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 51, 191),
-      Color(51, 229, 0, 191),
-      Color(0, 51, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(204, 102, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(204, 0, 102, 191),
-      Color(178, 127, 51, 191),
-      Color(178, 127, 51, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(102, 204, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(102, 204, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(102, 204, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(255, 255, 255, 191),
-      Color(12, 76, 25, 191),
-      Color(178, 2, 25, 191),
-      Color(51, 12, 153, 191),
-      Color(229, 229, 5, 191),
-      Color(0, 51, 102, 191),
-      Color(25, 102, 102, 191),
-      Color(204, 204, 204, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(204, 102, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(204, 0, 102, 191),
-      Color(178, 127, 51, 191),
-      Color(178, 127, 51, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(102, 204, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(102, 204, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(178, 178, 0, 191),
-      Color(178, 0, 178, 191),
-      Color(0, 178, 178, 191),
-      Color(229, 0, 0, 191),
-      Color(0, 229, 0, 191),
-      Color(0, 0, 229, 191),
-      Color(191, 191, 191, 191),
-      Color(204, 102, 0, 191),
-      Color(102, 204, 0, 191),
-      Color(0, 102, 204, 191),
-      Color(0, 204, 102, 191),
-      Color(102, 0, 204, 191),
-      Color(204, 0, 102, 191),
-      Color(120, 120, 120, 120) };
+    static const IO::Color color[149] = {
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(178, 38, 25, 191),
+      IO::Color(51, 51, 204, 191),
+      IO::Color(229, 153, 5, 191),
+      IO::Color(25, 76, 204, 191),
+      IO::Color(25, 178, 51, 191),
+      IO::Color(204, 204, 102, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 51, 191),
+      IO::Color(51, 229, 0, 191),
+      IO::Color(0, 51, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(178, 127, 51, 191),
+      IO::Color(178, 127, 51, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(102, 204, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(102, 204, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(102, 204, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(255, 255, 255, 191),
+      IO::Color(12, 76, 25, 191),
+      IO::Color(178, 2, 25, 191),
+      IO::Color(51, 12, 153, 191),
+      IO::Color(229, 229, 5, 191),
+      IO::Color(0, 51, 102, 191),
+      IO::Color(25, 102, 102, 191),
+      IO::Color(204, 204, 204, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(178, 127, 51, 191),
+      IO::Color(178, 127, 51, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(102, 204, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(102, 204, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(178, 178, 0, 191),
+      IO::Color(178, 0, 178, 191),
+      IO::Color(0, 178, 178, 191),
+      IO::Color(229, 0, 0, 191),
+      IO::Color(0, 229, 0, 191),
+      IO::Color(0, 0, 229, 191),
+      IO::Color(191, 191, 191, 191),
+      IO::Color(204, 102, 0, 191),
+      IO::Color(102, 204, 0, 191),
+      IO::Color(0, 102, 204, 191),
+      IO::Color(0, 204, 102, 191),
+      IO::Color(102, 0, 204, 191),
+      IO::Color(204, 0, 102, 191),
+      IO::Color(120, 120, 120, 120) };
     if(id > 148) id =148;
     return color[id];
   }
 
-  static CGAL::Color get_color_from_line(std::istream &is)
+  static CGAL::IO::Color get_color_from_line(std::istream &is)
   {
     std::string color_info;
     bool is_float = false;
@@ -573,7 +576,7 @@ public:
       if(index == 3)
         break;
     }
-    CGAL::Color color;
+    CGAL::IO::Color color;
     //if there were only one number, fetch the color in the color map
     if(index < 2)
     {
@@ -581,7 +584,7 @@ public:
       //else create the color with the 3 values;
     }
     else{
-      color = CGAL::Color(rgb[0], rgb[1], rgb[2]);
+      color = CGAL::IO::Color(rgb[0], rgb[1], rgb[2]);
     }
     std::iostream::pos_type ss_pos = iss.tellg();
     if(ss_pos != std::iostream::pos_type(-1))
@@ -607,7 +610,7 @@ public:
     }
     else
     {
-      CGAL::Color color;
+      CGAL::IO::Color color;
       if(color_entries == 1){
         color = get_indexed_color(static_cast<int>(entries[first_color_index])); // the index in the color map
         r = color.red();
@@ -653,7 +656,7 @@ public:
 
       if(has_colors())
       {
-        boost::int32_t k;
+        std::int32_t k;
         I_Binary_read_big_endian_integer32(m_in, k);
         if(k<0 || k>4)
         {
@@ -685,14 +688,14 @@ public:
     CGAL_assertion(current_facet < size_of_facets());
     if(binary())
     {
-      boost::int32_t i32;
+      std::int32_t i32;
       I_Binary_read_big_endian_integer32(m_in, i32);
       size = i32;
     }
     else
     {
       skip_comment();
-      std::string line;
+      line.clear();
       std::getline(m_in, line);
       // First remove the comment if there is one
       std::size_t pos = line.find('#');
@@ -704,12 +707,13 @@ public:
       std::istringstream issline(line);
       entries.clear();
       double d;
-      while(issline >> iformat(d)){
+      while(issline >> IO::iformat(d)){
         entries.push_back(d);
       }
       if(entries.empty())
       {
         m_in.clear(std::ios::badbit);
+        size = 0;
         return;
       }
       size = static_cast<std::size_t>(entries[0]);
@@ -731,7 +735,7 @@ public:
                                std::size_t current_facet)
   {
     if(binary()){
-      boost::int32_t i32;
+      std::int32_t i32;
       I_Binary_read_big_endian_integer32(m_in, i32);
       index = i32;
     }
@@ -742,6 +746,7 @@ public:
         m_in.clear(std::ios::badbit);
         if(verbose())
           std::cerr<<"error while reading facet. Missing index."<<std::endl;
+        index=0;
         return;
       }
       index = static_cast<std::size_t>(entries[current_entry]);
@@ -757,7 +762,7 @@ public:
                      "cannot read OFF file beyond facet "
                   << current_facet << "." << std::endl;
       }
-
+      index=0;
       set_off_header(false);
       return;
     }
@@ -777,7 +782,7 @@ public:
                   << index + index_offset() << ": is out of range."
                   << std::endl;
       }
-
+      index = 0;
       set_off_header(false);
       return;
     }
@@ -785,10 +790,10 @@ public:
 
   void skip_to_next_facet(std::size_t current_facet)
   {
-    // Take care of trailing informations like color triples.
+    // Take care of trailing information like color triples.
     if(binary())
     {
-      boost::int32_t k;
+      std::int32_t k;
       I_Binary_read_big_endian_integer32(m_in, k);
       if(k<0 || k>4)
       {

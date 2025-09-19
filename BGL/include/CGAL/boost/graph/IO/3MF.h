@@ -18,15 +18,17 @@
 #include <CGAL/boost/graph/iterator.h>
 
 #include <boost/property_map/property_map.hpp>
-#include <boost/utility/enable_if.hpp>
 
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <type_traits>
 
 #if defined(CGAL_LINKED_WITH_3MF) || defined(DOXYGEN_RUNNING)
 
 namespace CGAL {
+
+namespace IO {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +59,9 @@ bool write_3MF(const std::string& filename,
                const GraphRange& gs,
                const std::vector<std::string>& names
 #ifndef DOXYGEN_RUNNING
-               , typename boost::disable_if<
-                   IO::internal::is_Point_set_or_Range_or_Iterator<
-                     typename boost::range_value<GraphRange>::type> >::type* = nullptr
+               , std::enable_if_t<
+                   ! internal::is_Point_set_or_Range_or_Iterator<
+                       typename boost::range_value<GraphRange>::type>::value>* = nullptr
 #endif
                )
 {
@@ -114,7 +116,7 @@ bool write_3MF(const std::string& filename,
   return write_3MF(filename, all_points, all_triangles, names);
 }
 
-} // namespace CGAL
+} } // namespace CGAL::IO
 
 #endif // defined(CGAL_LINKED_WITH_3MF) || defined(DOXYGEN_RUNNING)
 

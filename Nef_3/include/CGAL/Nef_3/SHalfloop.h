@@ -21,6 +21,7 @@
 
 #include <string>
 #include <sstream>
+#include <CGAL/IO/io.h>
 #include <CGAL/IO/Verbose_ostream.h>
 #include <CGAL/Nef_3/SNC_iteration.h>
 
@@ -102,7 +103,7 @@ class SHalfloop_base {
  public:
     std::string debug() const
       { std::stringstream os;
-        set_pretty_mode(os);
+        CGAL::IO::set_pretty_mode(os);
         os<<"sl [ "<<circle_<<" ] ";
         return os.str();
       }

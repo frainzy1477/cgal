@@ -22,7 +22,6 @@
 #include <CGAL/representation_tags.h>
 #include <CGAL/kernel_assertions.h>
 #include <CGAL/assertions.h>
-#include <boost/type_traits/is_same.hpp>
 #include <CGAL/Kernel/Return_base_tag.h>
 #include <CGAL/Dimension.h>
 #include <CGAL/IO/io.h>
@@ -43,7 +42,7 @@ class Vector_3 : public R_::Kernel_base::Vector_3
   typedef typename R_::Aff_transformation_3  Aff_transformation_3;
 
   typedef Vector_3                            Self;
-  CGAL_static_assertion((boost::is_same<Self, typename R_::Vector_3>::value));
+  static_assert(std::is_same<Self, typename R_::Vector_3>::value);
 
 public:
 
@@ -70,6 +69,9 @@ public:
   Vector_3(const Rep& v)
       : Rep(v) {}
 
+  Vector_3(Rep&& v)
+      : Rep(std::move(v)) {}
+
   Vector_3(const Point_3& a, const Point_3& b)
     : Rep(typename R::Construct_vector_3()(Return_base_tag(), a, b)) {}
 
@@ -86,14 +88,17 @@ public:
     : Rep(typename R::Construct_vector_3()(Return_base_tag(), v)) {}
 
   template < typename T1, typename T2, typename T3 >
-  Vector_3(const T1 &x, const T2 &y, const T3 &z)
-    : Rep(typename R::Construct_vector_3()(Return_base_tag(), x, y, z)) {}
+  Vector_3(T1&& x, T2&& y, T3&& z)
+    : Rep(typename R::Construct_vector_3()(Return_base_tag(), std::forward<T1>(x),
+                                                              std::forward<T2>(y),
+                                                              std::forward<T3>(z)))
+  {}
 
   Vector_3(const RT& x, const RT& y, const RT& z, const RT& w)
     : Rep(typename R::Construct_vector_3()(Return_base_tag(), x, y, z, w)) {}
 
   friend void swap(Self& a, Self& b)
-#ifdef __cpp_lib_is_swappable
+#if !defined(__INTEL_COMPILER) && defined(__cpp_lib_is_swappable)
     noexcept(std::is_nothrow_swappable_v<Rep>)
 #endif
   {
@@ -267,7 +272,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Vector_3<R>& v, const Cartesian_tag&)
 {
-  switch(get_mode(os)) {
+  switch(IO::get_mode(os)) {
     case IO::ASCII :
       return os << v.x() << ' ' << v.y()  << ' ' << v.z();
     case IO::BINARY :
@@ -285,7 +290,7 @@ template <class R >
 std::ostream&
 insert(std::ostream& os, const Vector_3<R>& v, const Homogeneous_tag&)
 {
-  switch(get_mode(os))
+  switch(IO::get_mode(os))
   {
     case IO::ASCII :
         return os << v.hx() << ' ' << v.hy() << ' ' << v.hz() << ' ' << v.hw();
@@ -316,9 +321,9 @@ std::istream&
 extract(std::istream& is, Vector_3<R>& v, const Cartesian_tag&)
 {
   typename R::FT x(0), y(0), z(0);
-  switch(get_mode(is)) {
+  switch(IO::get_mode(is)) {
     case IO::ASCII :
-      is >> iformat(x) >> iformat(y) >> iformat(z);
+      is >> IO::iformat(x) >> IO::iformat(y) >> IO::iformat(z);
       break;
     case IO::BINARY :
       read(is, x);
@@ -328,7 +333,7 @@ extract(std::istream& is, Vector_3<R>& v, const Cartesian_tag&)
     default:
       is.setstate(std::ios::failbit);
       std::cerr << "" << std::endl;
-      std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+      std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
       break;
   }
   if (is)
@@ -341,7 +346,7 @@ std::istream&
 extract(std::istream& is, Vector_3<R>& v, const Homogeneous_tag&)
 {
   typename R::RT hx, hy, hz, hw;
-  switch(get_mode(is))
+  switch(IO::get_mode(is))
   {
     case IO::ASCII :
         is >> hx >> hy >> hz >> hw;
@@ -355,7 +360,7 @@ extract(std::istream& is, Vector_3<R>& v, const Homogeneous_tag&)
     default:
         is.setstate(std::ios::failbit);
         std::cerr << "" << std::endl;
-        std::cerr << "Stream must be in ascii or binary mode" << std::endl;
+        std::cerr << "Stream must be in ASCII or binary mode" << std::endl;
         break;
   }
   if (is)

@@ -25,8 +25,20 @@ MathJax.Hub.Config(
           ccProd: [ "{\\prod_{#1}^{#2}{#3}}", 3],
           pyr: [ "{\\operatorname{Pyr}}", 0],
           aff: [ "{\\operatorname{aff}}", 0],
+          Ac: [ "{\\cal A}", 0],
+          Sc: [ "{\\cal S}", 0],
       }
   }
 }
 );
+MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+  var PARSE = MathJax.InputJax.TeX.Parse,
+      TEXT = PARSE.prototype.InternalText;
+  PARSE.Augment({
+    InternalText: function (text,def) {
+      text = text.replace(/\\/g,"");
+      return TEXT.call(this,text,def);
+    }
+  });
+});
 //]]>

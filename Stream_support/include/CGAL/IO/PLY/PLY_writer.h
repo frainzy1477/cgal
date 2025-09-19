@@ -116,7 +116,7 @@ template <typename ForwardIterator,
           typename PropertyMap>
 void property_write(std::ostream& stream, ForwardIterator it, PropertyMap map)
 {
-  stream << CGAL::oformat(get(map, *it));
+  stream << CGAL::IO::oformat(get(map, *it));
 }
 
 template <typename T>
@@ -132,7 +132,7 @@ void simple_property_write(std::ostream& stream,
                            ForwardIterator it,
                            std::pair<PropertyMap, PLY_property<T> > map)
 {
-  if(CGAL::get_mode(stream) == CGAL::IO::ASCII)
+  if(CGAL::IO::get_mode(stream) == CGAL::IO::ASCII)
     stream << no_char_character(get(map.first, *it));
   else
   {
@@ -148,9 +148,9 @@ void simple_property_write(std::ostream& stream,
                            ForwardIterator it,
                            std::pair<PropertyMap, PLY_property<std::vector<T> > > map)
 {
-  const typename PropertyMap::reference value = get(map.first, *it);
+  const typename PropertyMap::value_type& value = get(map.first, *it);
 
-  if(CGAL::get_mode(stream) == CGAL::IO::ASCII)
+  if(CGAL::IO::get_mode(stream) == CGAL::IO::ASCII)
   {
     stream << value.size();
     for(std::size_t i = 0; i < value.size(); ++ i)
@@ -176,7 +176,7 @@ void output_properties(std::ostream& stream,
                        std::tuple<PropertyMap, PLY_property<T>... >&& current)
 {
   property_write(stream, it, std::get<0>(current));
-  if(get_mode(stream) == CGAL::IO::ASCII)
+  if(CGAL::IO::get_mode(stream) == CGAL::IO::ASCII)
     stream << std::endl;
 }
 
@@ -266,7 +266,7 @@ public:
   virtual void print(std::ostream& stream, const Index& index)
   {
     if(get_mode(stream) == CGAL::IO::ASCII)
-      stream << get(m_pmap, index);
+      stream << no_char_character(get(m_pmap, index));
     else
     {
       Type t = Type(get(m_pmap, index));
@@ -275,25 +275,37 @@ public:
   }
 };
 
-template <typename Index, typename PropertyMap>
-class Char_property_printer
+template <typename Index,
+          typename PropertyMap,
+          typename VectorType = typename boost::property_traits<PropertyMap>::value_type,
+          typename ElementType = typename VectorType::value_type>
+class Simple_property_vector_printer
   : public Abstract_property_printer<Index>
 {
-  typedef typename boost::property_traits<PropertyMap>::value_type Type;
-
   PropertyMap m_pmap;
-
 public:
-  Char_property_printer(const PropertyMap& pmap) : m_pmap(pmap) { }
+  Simple_property_vector_printer(const PropertyMap& pmap) : m_pmap(pmap) { }
 
   virtual void print(std::ostream& stream, const Index& index)
   {
+    const VectorType& vec = get(m_pmap, index);
     if(get_mode(stream) == CGAL::IO::ASCII)
-      stream << int(get(m_pmap, index));
+    {
+      stream << vec.size();
+      for(const ElementType& v : vec)
+      {
+        stream << " " << v;
+      }
+    }
     else
     {
-      Type t = get(m_pmap, index);
-      stream.write(reinterpret_cast<char*>(&t), sizeof(t));
+      unsigned char size = (unsigned char)(vec.size());
+      stream.write(reinterpret_cast<char*>(&size), sizeof(size));
+      for(const ElementType& v : vec)
+      {
+        ElementType t = ElementType(v);
+        stream.write(reinterpret_cast<char*>(&t), sizeof(t));
+      }
     }
   }
 };

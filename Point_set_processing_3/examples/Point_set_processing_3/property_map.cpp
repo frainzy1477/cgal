@@ -53,7 +53,7 @@ void process_point_set(Iterator beg, Iterator end, PointPMap pmap)
   std::sort(beg,end,less);
 }
 
-// We can call it just with points. Then interally we use a property map
+// We can call it just with points. Then internally we use a property map
 // that maps point iterators on points.
 
 template <typename Iterator>
@@ -82,7 +82,7 @@ void orient_normals(Iterator beg, Iterator end, OrientationPMap orient_pmap, Nor
 
 int main()
 {
-  CGAL::set_pretty_mode(std::cout);
+  CGAL::IO::set_pretty_mode(std::cout);
 
   // Here we run it on plain points. No need for a property map
   {

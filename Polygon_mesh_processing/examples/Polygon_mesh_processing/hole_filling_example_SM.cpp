@@ -8,9 +8,10 @@
 #include <boost/lexical_cast.hpp>
 
 #include <iostream>
-#include <fstream>
+#include <iterator>
+#include <string>
+#include <tuple>
 #include <vector>
-#include <set>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 typedef Kernel::Point_3                                     Point;
@@ -49,10 +50,10 @@ bool is_small_hole(halfedge_descriptor h, Mesh & mesh,
 
 int main(int argc, char* argv[])
 {
-  const char* filename = (argc > 1) ? argv[1] : "data/mech-holes-shark.off";
+  const std::string filename = (argc > 1) ? argv[1] : CGAL::data_file_path("meshes/mech-holes-shark.off");
 
   Mesh mesh;
-  if(!PMP::read_polygon_mesh(filename, mesh))
+  if(!PMP::IO::read_polygon_mesh(filename, mesh))
   {
     std::cerr << "Invalid input." << std::endl;
     return 1;
@@ -78,8 +79,8 @@ int main(int argc, char* argv[])
     std::vector<vertex_descriptor> patch_vertices;
     bool success = std::get<0>(PMP::triangulate_refine_and_fair_hole(mesh,
                                                                      h,
-                                                                     std::back_inserter(patch_facets),
-                                                                     std::back_inserter(patch_vertices)));
+                                                                     CGAL::parameters::face_output_iterator(std::back_inserter(patch_facets))
+                                                                                      .vertex_output_iterator(std::back_inserter(patch_vertices))));
 
     std::cout << "* Number of facets in constructed patch: " << patch_facets.size() << std::endl;
     std::cout << "  Number of vertices in constructed patch: " << patch_vertices.size() << std::endl;
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
   std::cout << std::endl;
   std::cout << nb_holes << " holes have been filled" << std::endl;
 
-  CGAL::write_polygon_mesh("filled_SM.off", mesh, CGAL::parameters::stream_precision(17));
+  CGAL::IO::write_polygon_mesh("filled_SM.off", mesh, CGAL::parameters::stream_precision(17));
   std::cout << "Mesh written to: filled_SM.off" << std::endl;
 
   return 0;

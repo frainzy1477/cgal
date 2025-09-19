@@ -19,20 +19,12 @@
 
 #include <CGAL/assertions.h>
 #include <CGAL/boost/graph/Euler_operations.h>
-#include <CGAL/boost/graph/Named_function_parameters.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
-
-#include <boost/utility/enable_if.hpp>
 
 #include <fstream>
 #include <iostream>
 #include <string>
-
-#ifdef DOXYGEN_RUNNING
-#define CGAL_BGL_NP_TEMPLATE_PARAMETERS NamedParameters
-#define CGAL_BGL_NP_CLASS NamedParameters
-#define CGAL_DEPRECATED
-#endif
 
 namespace CGAL {
 
@@ -70,20 +62,19 @@ public:
 
 // Because some packages can provide overloads with the same signature to automatically initialize
 // property maps (see Surface_mesh/IO/ for example)
-template <typename Graph, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+template <typename Graph, typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_OFF_BGL(std::istream& is,
                   Graph& g,
-                  const CGAL_BGL_NP_CLASS& np)
+                  const CGAL_NP_CLASS& np)
 {
-  typedef typename CGAL::GetVertexPointMap<Graph, CGAL_BGL_NP_CLASS>::type  VPM;
+  typedef typename CGAL::GetVertexPointMap<Graph, CGAL_NP_CLASS>::type  VPM;
   typedef typename boost::property_traits<VPM>::value_type                  Point;
 
-  IO::internal::OFF_builder<Graph, Point> builder(is);
+  internal::OFF_builder<Graph, Point> builder(is);
   return builder(g, np);
 }
 
 } // namespace internal
-} // namespace IO
 
 /*!
   \ingroup PkgBGLIoFuncsOFF
@@ -127,7 +118,7 @@ bool read_OFF_BGL(std::istream& is,
     \cgalParamNBegin{vertex_color_map}
       \cgalParamDescription{a property map associating colors to the vertices of `g`}
       \cgalParamType{a class model of `WritablePropertyMap` with `boost::graph_traits<Graph>::%vertex_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{vertex colors that may exist in the input will be ignored}
     \cgalParamNEnd
 
@@ -141,7 +132,7 @@ bool read_OFF_BGL(std::istream& is,
     \cgalParamNBegin{face_color_map}
       \cgalParamDescription{a property map associating colors to the faces of `g`}
       \cgalParamType{a class model of `WritablePropertyMap` with `boost::graph_traits<Graph>::%face_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{face colors that may exist in the input will be ignored}
     \cgalParamNEnd
 
@@ -157,28 +148,17 @@ bool read_OFF_BGL(std::istream& is,
   \sa Overloads of this function for specific models of the concept `FaceGraph`.
 */
 template <typename Graph,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_OFF(std::istream& is,
               Graph& g,
-              const CGAL_BGL_NP_CLASS& np
+              const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-              , typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr
+              , std::enable_if_t<!internal::is_Point_set_or_Range_or_Iterator<Graph>::value>* = nullptr
 #endif
               )
 {
-  return IO::internal::read_OFF_BGL(is, g, np);
+  return internal::read_OFF_BGL(is, g, np);
 }
-
-/// \cond SKIP_IN_MANUAL
-
-template <typename Graph>
-bool read_OFF(std::istream& is, Graph& g,
-              typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr)
-{
-  return read_OFF(is, g, parameters::all_default());
-}
-
-/// \endcond
 
 /*!
   \ingroup PkgBGLIoFuncsOFF
@@ -222,7 +202,7 @@ bool read_OFF(std::istream& is, Graph& g,
     \cgalParamNBegin{vertex_color_map}
       \cgalParamDescription{a property map associating colors to the vertices of `g`}
       \cgalParamType{a class model of `WritablePropertyMap` with `boost::graph_traits<Graph>::%vertex_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{vertex colors that may exist in the input will be ignored}
     \cgalParamNEnd
 
@@ -236,7 +216,7 @@ bool read_OFF(std::istream& is, Graph& g,
     \cgalParamNBegin{face_color_map}
       \cgalParamDescription{a property map associating colors to the faces of `g`}
       \cgalParamType{a class model of `WritablePropertyMap` with `boost::graph_traits<Graph>::%face_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{face colors that may exist in the input will be ignored}
     \cgalParamNEnd
 
@@ -252,12 +232,12 @@ bool read_OFF(std::istream& is, Graph& g,
   \sa Overloads of this function for specific models of the concept `FaceGraph`.
 */
 template <typename Graph,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool read_OFF(const std::string& fname,
               Graph& g,
-              const CGAL_BGL_NP_CLASS& np
+              const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-              , typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr
+              , std::enable_if_t<!internal::is_Point_set_or_Range_or_Iterator<Graph>::value>* = nullptr
 #endif
               )
 {
@@ -265,54 +245,9 @@ bool read_OFF(const std::string& fname,
   return read_OFF(is, g, np);
 }
 
-/// \cond SKIP_IN_MANUAL
+} // namespace IO
 
-template <typename Graph>
-bool read_OFF(const std::string& fname, Graph& g,
-              typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr)
-{
-  return read_OFF(fname, g, parameters::all_default());
-}
 
-/// \endcond
-
-#ifndef CGAL_NO_DEPRECATED_CODE
-
-/*!
- \ingroup PkgBGLIOFctDeprecated
-
- \deprecated This function is deprecated since \cgal 5.2, `CGAL::read_OFF()` should be used instead.
-*/
-template <typename Graph, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-CGAL_DEPRECATED bool read_off(std::istream& is, Graph& g, const CGAL_BGL_NP_CLASS& np)
-{
-  return read_OFF(is, g, np);
-}
-
-/*!
-\ingroup PkgBGLIOFctDeprecated
-
-\deprecated This function is deprecated since \cgal 5.2, `CGAL::read_OFF()` should be used instead.
-*/
-template <typename Graph, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-CGAL_DEPRECATED bool read_off(const char* fname, Graph& g, const CGAL_BGL_NP_CLASS& np)
-{
- return read_OFF(fname, g, np);
-}
-
-template <typename Graph>
-CGAL_DEPRECATED bool read_off(std::istream& is, Graph& g)
-{
-  return read_off(is, g, parameters::all_default());
-}
-
-template <typename Graph>
-CGAL_DEPRECATED bool read_off(const char* fname, Graph& g)
-{
- return read_off(fname, g, parameters::all_default());
-}
-
-#endif // CGAL_NO_DEPRECATED_CODE
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,17 +256,16 @@ CGAL_DEPRECATED bool read_off(const char* fname, Graph& g)
 namespace IO {
 namespace internal {
 
-template <typename Graph, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+template <typename Graph, typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool write_OFF_BGL(std::ostream& os,
                    const Graph& g,
-                   const CGAL_BGL_NP_CLASS& np)
+                   const CGAL_NP_CLASS& np)
 {
-  IO::internal::Generic_facegraph_printer<std::ostream, Graph, CGAL::File_writer_OFF> printer(os);
+  internal::Generic_facegraph_printer<std::ostream, Graph, CGAL::File_writer_OFF> printer(os);
   return printer(g, np);
 }
 
 } // namespace internal
-} // namespace IO
 
 /*!
   \ingroup PkgBGLIoFuncsOFF
@@ -365,7 +299,7 @@ bool write_OFF_BGL(std::ostream& os,
     \cgalParamNBegin{vertex_color_map}
       \cgalParamDescription{a property map associating colors to the vertices of `g`}
       \cgalParamType{a class model of `ReadablePropertyMap` with `boost::graph_traits<Graph>::%vertex_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{no vertex colors in the output}
     \cgalParamNEnd
 
@@ -379,14 +313,14 @@ bool write_OFF_BGL(std::ostream& os,
     \cgalParamNBegin{face_color_map}
       \cgalParamDescription{a property map associating colors to the faces of `g`}
       \cgalParamType{a class model of `ReadablePropertyMap` with `boost::graph_traits<Graph>::%face_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{no face colors in the output}
     \cgalParamNEnd
 
     \cgalParamNBegin{stream_precision}
       \cgalParamDescription{a parameter used to set the precision (i.e. how many digits are generated) of the output stream}
       \cgalParamType{int}
-      \cgalParamDefault{`the precision of the stream `os``}
+      \cgalParamDefault{the precision of the stream `os`}
     \cgalParamNEnd
   \cgalNamedParamsEnd
 
@@ -395,28 +329,17 @@ bool write_OFF_BGL(std::ostream& os,
   \sa Overloads of this function for specific models of the concept `FaceGraph`.
 */
 template <typename Graph,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool write_OFF(std::ostream& os,
                const Graph& g,
-               const CGAL_BGL_NP_CLASS& np
+               const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-               , typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr
+               , std::enable_if_t<!internal::is_Point_set_or_Range_or_Iterator<Graph>::value>* = nullptr
 #endif
                )
 {
-  return IO::internal::write_OFF_BGL(os, g, np);
+  return internal::write_OFF_BGL(os, g, np);
 }
-
-/// \cond SKIP_IN_MANUAL
-
-template <typename Graph>
-bool write_OFF(std::ostream& os, const Graph& g,
-               typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr)
-{
-  return write_OFF(os, g, parameters::all_default());
-}
-
-/// \endcond
 
 /*!
   \ingroup PkgBGLIoFuncsOFF
@@ -450,7 +373,7 @@ bool write_OFF(std::ostream& os, const Graph& g,
     \cgalParamNBegin{vertex_color_map}
       \cgalParamDescription{a property map associating colors to the vertices of `g`}
       \cgalParamType{a class model of `ReadablePropertyMap` with `boost::graph_traits<Graph>::%vertex_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{no vertex colors in the output}
     \cgalParamNEnd
 
@@ -464,7 +387,7 @@ bool write_OFF(std::ostream& os, const Graph& g,
     \cgalParamNBegin{face_color_map}
       \cgalParamDescription{a property map associating colors to the faces of `g`}
       \cgalParamType{a class model of `ReadablePropertyMap` with `boost::graph_traits<Graph>::%face_descriptor`
-                     as key type and `CGAL::Color` as value type}
+                     as key type and `CGAL::IO::Color` as value type}
       \cgalParamDefault{no face colors in the output}
     \cgalParamNEnd
 
@@ -480,12 +403,12 @@ bool write_OFF(std::ostream& os, const Graph& g,
   \sa Overloads of this function for specific models of the concept `FaceGraph`.
 */
 template <typename Graph,
-          typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
+          typename CGAL_NP_TEMPLATE_PARAMETERS>
 bool write_OFF(const std::string& fname,
                const Graph& g,
-               const CGAL_BGL_NP_CLASS& np
+               const CGAL_NP_CLASS& np = parameters::default_values()
 #ifndef DOXYGEN_RUNNING
-               , typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr
+               , std::enable_if_t<!internal::is_Point_set_or_Range_or_Iterator<Graph>::value>* = nullptr
 #endif
                )
 {
@@ -499,52 +422,8 @@ bool write_OFF(const std::string& fname,
   return write_OFF(os, g, np);
 }
 
-/// \cond SKIP_IN_MANUAL
+} // namespace IO
 
-template <typename Graph>
-bool write_OFF(const std::string& fname, const Graph& g,
-               typename boost::disable_if<IO::internal::is_Point_set_or_Range_or_Iterator<Graph> >::type* = nullptr)
-{
-  return write_OFF(fname, g, parameters::all_default());
-}
-
-/// \endcond
-
-#ifndef CGAL_NO_DEPRECATED_CODE
-
-/*!
- \ingroup PkgBGLIOFctDeprecated
-
- \deprecated This function is deprecated since \cgal 5.2, `CGAL::write_OFF()` should be used instead.
-*/
-template <typename Graph, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-CGAL_DEPRECATED bool write_off(std::ostream& os, const Graph& g, const CGAL_BGL_NP_CLASS& np)
-{
-  return write_OFF(os, g, np);
-}
-
-template <typename Graph>
-CGAL_DEPRECATED bool write_off(std::ostream& os, const Graph& g)
-{
-  return write_off(os, g, CGAL::parameters::all_default());
-}
-/*!
-\ingroup PkgBGLIOFctDeprecated
-
-\deprecated This function is deprecated since \cgal 5.2, `CGAL::write_OFF()` should be used instead.
-*/
-template <typename Graph, typename CGAL_BGL_NP_TEMPLATE_PARAMETERS>
-CGAL_DEPRECATED bool write_off(const char* fname, const Graph& g, const CGAL_BGL_NP_CLASS& np)
-{
- return write_OFF(fname, g, np);
-}
-
-template <typename Graph>
-CGAL_DEPRECATED bool write_off(const char* fname, const Graph& g)
-{
-  return write_off(fname, g, parameters::all_default());
-}
-#endif // CGAL_NO_DEPRECATED_CODE
 
 } // namespace CGAL
 

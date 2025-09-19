@@ -13,7 +13,7 @@
 
 #include <CGAL/assertions.h>
 #include <CGAL/boost/graph/iterator.h>
-#include <CGAL/boost/graph/Named_function_parameters.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/boost/graph/named_params_helper.h>
 #include <CGAL/property_map.h>
 
@@ -88,14 +88,14 @@ public:
   Generic_facegraph_printer(Stream& os) : m_os(os) { }
   Generic_facegraph_printer(Stream& os, FileWriter writer) : m_os(os), m_writer(writer) { }
 
-  template <typename NamedParameters>
+  template <typename NamedParameters = parameters::Default_named_parameters>
   bool operator()(const Graph& g,
-                  const NamedParameters& np)
+                  const NamedParameters& np = parameters::default_values())
   {
     typedef typename GetVertexPointMap<Graph, NamedParameters>::const_type         VPM;
     typedef typename boost::property_traits<VPM>::reference                        Point_ref;
 
-    typedef CGAL::Color                                                            Color;
+    typedef CGAL::IO::Color                                                        Color;
 
     typedef typename internal_np::Lookup_named_param_def<
       internal_np::vertex_color_map_t, NamedParameters,
@@ -122,10 +122,10 @@ public:
     VPM vpm = choose_parameter(get_parameter(np, internal_np::vertex_point),
                                get_const_property_map(CGAL::vertex_point, g));
 
-    const bool has_vertex_normals = !(is_default_parameter(get_parameter(np, internal_np::vertex_normal_map)));
-    const bool has_vertex_colors = !(is_default_parameter(get_parameter(np, internal_np::vertex_color_map)));
-    const bool has_vertex_textures = !(is_default_parameter(get_parameter(np, internal_np::vertex_texture_map)));
-    const bool has_face_colors = !(is_default_parameter(get_parameter(np, internal_np::face_color_map)));
+    const bool has_vertex_normals = !(is_default_parameter<NamedParameters, internal_np::vertex_normal_map_t>::value);
+    const bool has_vertex_colors = !(is_default_parameter<NamedParameters, internal_np::vertex_color_map_t>::value);
+    const bool has_vertex_textures = !(is_default_parameter<NamedParameters, internal_np::vertex_texture_map_t>::value);
+    const bool has_face_colors = !(is_default_parameter<NamedParameters, internal_np::face_color_map_t>::value);
 
     VNM vnm = get_parameter(np, internal_np::vertex_normal_map);
     VTM vtm = get_parameter(np, internal_np::vertex_texture_map);
@@ -153,7 +153,7 @@ public:
 
       if(has_vertex_colors)
       {
-        const CGAL::Color& vc = get(vcm, v);
+        const CGAL::IO::Color& vc = get(vcm, v);
         m_writer.write_vertex_color(vc.red(), vc.green(), vc.blue()); // @fixme correct?
       }
 
@@ -182,7 +182,7 @@ public:
 
       if(has_face_colors)
       {
-        const CGAL::Color& fc = get(fcm, f);
+        const CGAL::IO::Color& fc = get(fcm, f);
         m_writer.write_face_color(fc.red(), fc.green(), fc.blue());
       }
 
@@ -192,8 +192,6 @@ public:
 
     return m_os.good();
   }
-
-  bool operator()(const Graph& g) { return operator()(g, parameters::all_default()); }
 
 protected:
   Stream& m_os;

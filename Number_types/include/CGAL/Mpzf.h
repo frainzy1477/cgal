@@ -12,12 +12,18 @@
 
 #ifndef CGAL_MPZF_H
 #define CGAL_MPZF_H
+
+#ifndef CGAL_NO_MPZF_DIVISION_OPERATOR
+#define CGAL_MPZF_DIVISION_OPERATOR 1
+#endif
+
 #include <cstdlib>
 #include <algorithm>
 #include <climits>
 #include <vector>
 #include <math.h>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #ifdef CGAL_USE_GMPXX
@@ -108,16 +114,9 @@
 #if !defined(CGAL_HAS_THREADS)
 #define CGAL_MPZF_THREAD_LOCAL
 #define CGAL_MPZF_TLS
-#elif defined(CGAL_CAN_USE_CXX11_THREAD_LOCAL)
+#else
 #define CGAL_MPZF_THREAD_LOCAL thread_local
 #define CGAL_MPZF_TLS thread_local
-#elif defined(_MSC_VER)
-#define CGAL_MPZF_THREAD_LOCAL __declspec(thread)
-#define CGAL_MPZF_TLS
-#else
-#define CGAL_MPZF_THREAD_LOCAL __thread
-#define CGAL_MPZF_TLS
-// Too bad for the others
 #endif
 namespace CGAL {
 namespace Mpzf_impl {
@@ -150,7 +149,7 @@ template <class T, class = void> struct pool2 {
   static bool empty() { return data() == 0; }
   static const int extra = 1; // TODO: handle the case where a pointer is larger than a mp_limb_t
   private:
-  CGAL_static_assertion(sizeof(T) >= sizeof(T*));
+  static_assert(sizeof(T) >= sizeof(T*));
   static T& data () {
     static CGAL_MPZF_TLS T data_ = 0;
     return data_;
@@ -158,19 +157,18 @@ template <class T, class = void> struct pool2 {
   static T& ptr(T t) { t -= extra+1; return *reinterpret_cast<T*>(t); }
 };
 
-#if defined(CGAL_CAN_USE_CXX11_THREAD_LOCAL)
 template <class T, class = void> struct pool3 {
   static T pop() { T ret = data(); data() = ptr(data()); return ret; }
   static void push(T t) { ptr(t) = data(); data() = t; }
   static bool empty() { return data() == 0; }
   static const int extra = 1; // TODO: handle the case where a pointer is larger than a mp_limb_t
   private:
-  CGAL_static_assertion(sizeof(T) >= sizeof(T*));
+  static_assert(sizeof(T) >= sizeof(T*));
   struct cleaner {
     T data_ = 0;
     ~cleaner(){
       // Deallocate everything. As an alternative, we could store it in a
-      // global location, for re-use by a later thread.
+      // global location, for reuse by a later thread.
       while (!empty())
         delete[] (pop() - (extra + 1));
     }
@@ -181,7 +179,6 @@ template <class T, class = void> struct pool3 {
   }
   static T& ptr(T t) { t -= extra+1; return *reinterpret_cast<T*>(t); }
 };
-#endif
 
 // No caching
 template <class T, class = void> struct no_pool {
@@ -192,7 +189,7 @@ template <class T, class = void> struct no_pool {
 };
 
 // Only used with an argument known not to be 0.
-inline int ctz (boost::uint64_t x) {
+inline int ctz (std::uint64_t x) {
 #if defined(_MSC_VER)
   unsigned long ret;
   _BitScanForward64(&ret, x);
@@ -204,7 +201,7 @@ inline int ctz (boost::uint64_t x) {
   return __builtin_ctzll (x);
 #endif
 }
-inline int clz (boost::uint64_t x) {
+inline int clz (std::uint64_t x) {
 #if defined(_MSC_VER)
   unsigned long ret;
   _BitScanReverse64(&ret, x);
@@ -434,7 +431,7 @@ struct Mpzf {
   }
   Mpzf(double d){
     init();
-    using boost::uint64_t;
+    using std::uint64_t;
     union {
 #ifdef CGAL_LITTLE_ENDIAN
       struct { uint64_t man:52; uint64_t exp:11; uint64_t sig:1; } s;
@@ -459,7 +456,7 @@ struct Mpzf {
     }
     int e1 = (int)dexp+13;
     // FIXME: make it more general! But not slower...
-    CGAL_static_assertion(GMP_NUMB_BITS == 64);
+    static_assert(GMP_NUMB_BITS == 64);
     int e2 = e1 % 64;
     exp = e1 / 64 - 17;
     // 52+1023+13==17*64 ?
@@ -774,7 +771,11 @@ struct Mpzf {
     return res;
   }
 
+#ifndef CGAL_MPZF_DIVISION_OPERATOR
+  friend Mpzf division(Mpzf const&a, Mpzf const&b){
+#else // CGAL_MPZF_DIVISION_OPERATOR
   friend Mpzf operator/(Mpzf const&a, Mpzf const&b){
+#endif // CGAL_MPZF_DIVISION_OPERATOR
     // FIXME: Untested
     int asize=std::abs(a.size);
     int bsize=std::abs(b.size);
@@ -909,7 +910,9 @@ struct Mpzf {
   Mpzf& operator+=(Mpzf const&x){ *this=*this+x; return *this; }
   Mpzf& operator-=(Mpzf const&x){ *this=*this-x; return *this; }
   Mpzf& operator*=(Mpzf const&x){ *this=*this*x; return *this; }
+#ifdef CGAL_MPZF_DIVISION_OPERATOR
   Mpzf& operator/=(Mpzf const&x){ *this=*this/x; return *this; }
+#endif // not CGAL_MPZF_DIVISION_OPERATOR
 
   bool is_canonical () const {
     if (size == 0) return true;
@@ -1096,7 +1099,11 @@ std::istream& operator>> (std::istream& is, Mpzf& a)
           Type operator()(
               const Type& x,
               const Type& y ) const {
+#ifdef CGAL_MPZF_DIVISION_OPERATOR
             return x / y;
+#else // not CGAL_MPZF_DIVISION_OPERATOR
+            return division(x, y);
+#endif // not CGAL_MPZF_DIVISION_OPERATOR
           }
         };
 

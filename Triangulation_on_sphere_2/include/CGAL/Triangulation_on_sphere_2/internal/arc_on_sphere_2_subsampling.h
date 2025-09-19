@@ -15,9 +15,12 @@
 
 #include <CGAL/license/Triangulation_on_sphere_2.h>
 
-#ifdef CGAL_EIGEN3_ENABLED
+#include <CGAL/assertions.h>
+#include <CGAL/Default.h>
 
+#ifdef CGAL_EIGEN3_ENABLED
 #include <CGAL/Eigen_solver_traits.h>
+#endif
 
 #include <cmath>
 #include <list>
@@ -26,16 +29,35 @@ namespace CGAL {
 namespace Triangulations_on_sphere_2 {
 namespace internal {
 
-template <class Kernel>
-double get_theta( typename Kernel::Point_3& pt,
-                  typename Kernel::Vector_3& V1,
-                  typename Kernel::Vector_3& V2,
-                  typename Kernel::Vector_3& V3)
+template <class Kernel,
+          class Matrix_ = Default,
+          class Col_ = Default,
+          class EigenlessDefault = void>
+double get_theta(typename Kernel::Point_3& pt,
+                 typename Kernel::Vector_3& V1,
+                 typename Kernel::Vector_3& V2,
+                 typename Kernel::Vector_3& V3)
 {
   typedef typename Kernel::FT                                        FT;
 
-  typedef Eigen::Matrix<FT, 3, 3, Eigen::DontAlign>                  Matrix;
-  typedef Eigen::Matrix<FT, 3, 1>                                    Col;
+  typedef typename Default::Get<Matrix_,
+#ifdef CGAL_EIGEN3_ENABLED
+                                Eigen::Matrix<FT, 3, 3, Eigen::DontAlign>
+#else
+                                EigenlessDefault
+#endif
+                                >::type                              Matrix;
+
+  typedef typename Default::Get<Col_,
+#ifdef CGAL_EIGEN3_ENABLED
+                                Eigen::Matrix<FT, 3, 1>
+#else
+                                EigenlessDefault
+#endif
+                                >::type                              Col;
+
+  static_assert(!(std::is_same<Matrix, EigenlessDefault>::value),
+                            "Eigen is required to perform arc subsampling!");
 
   auto V1c = V1.cartesian_begin(), V2c = V2.cartesian_begin(), V3c = V3.cartesian_begin();
 
@@ -81,7 +103,7 @@ void subsample_arc_on_sphere_2(const typename Kernel::Circle_3& circle,
   if(source > target)
     target += 2*CGAL_PI;
 
-  CGAL_triangulation_assertion(target > source);
+  CGAL_assertion(target > source);
 
   const double radius = sqrt(circle.squared_radius());
   const double edge_len = (target - source) * radius;
@@ -93,7 +115,7 @@ void subsample_arc_on_sphere_2(const typename Kernel::Circle_3& circle,
   for(int i=0; i<nb_of_segments-1; ++i)
   {
     current_theta += step_size;
-    CGAL_triangulation_assertion(current_theta <= target);
+    CGAL_assertion(current_theta <= target);
     *out_pts++ = compute_point<Kernel>(circle.center(), radius, current_theta, b1, b2);
   }
   *out_pts++ = compute_point<Kernel>(circle.center(), radius, target, b1, b2);
@@ -153,7 +175,5 @@ void subsample_arc_on_sphere_2(const ArcOnSphere& arc,
 } // namespace internal
 } // namespace Triangulations_on_sphere_2
 } // namespace CGAL
-
-#endif // CGAL_EIGEN3_ENABLED
 
 #endif // CGAL_TOS2_INTERNAL_ARC_ON_SPHERE_SUBSAMPLING_H

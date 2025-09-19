@@ -22,7 +22,7 @@
 #include <CGAL/Simple_cartesian.h>
 
 #include <CGAL/AABB_tree.h>
-#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_traits_3.h>
 #include <CGAL/Polyhedron_3.h>
 
 #include <CGAL/spatial_sort.h>
@@ -141,8 +141,8 @@ int main(void)
 {
     const double duration = 0.1;
     std::cout << "AABB hint strategy tests" << std::endl;
-    test_kernels<TRIANGLE>("./data/cube.off",duration);
-    test_kernels<TRIANGLE>("./data/coverrear.off",duration);
-    test_kernels<TRIANGLE>("./data/finger.off",duration);
+    test_kernels<TRIANGLE>("data/cube.off",duration);
+    test_kernels<TRIANGLE>("data/coverrear.off",duration);
+    test_kernels<TRIANGLE>("data/finger.off",duration);
     return EXIT_SUCCESS;
 }

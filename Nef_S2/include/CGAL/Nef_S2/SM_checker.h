@@ -79,12 +79,12 @@ bool is_forward(Halfedge_const_handle e) const
 
 void check_order_preserving_embedding(Vertex_const_handle v) const;
 /*{\Mop checks if the embedding of the targets of the edges in
-the adjacency list |A(v)| is counter-clockwise order-preserving with
+the adjacency list |A(v)| is counterclockwise order-preserving with
 respect to the order of the edges in |A(v)|.}*/
 
 void check_order_preserving_embedding() const;
 /*{\Mop checks if the embedding of all vertices of |P| is
-counter-clockwise order-preserving with respect to the adjacency
+counterclockwise order-preserving with respect to the adjacency
 list ordering of all vertices.}*/
 
 void check_forward_prefix_condition(Vertex_const_handle v) const;
@@ -108,7 +108,7 @@ void SM_checker<PMCDEC,GEOM>::
 check_order_preserving_embedding(Vertex_const_handle v) const
 {
   std::ostrstream error_status;
-  CGAL::set_pretty_mode ( error_status );
+  CGAL::IO::set_pretty_mode ( error_status );
   Halfedge_const_handle ef = first_out_edge(v) ,e=ef,en,enn;
   error_status << "check_order_preserving_embedding\n";
   error_status << "vertex " << PV(v) << endl;
@@ -219,7 +219,7 @@ check_is_triangulation() const
   CGAL::Hash_map< Halfedge_const_iterator, bool> on_boundary(false);
   Halfedge_around_face_const_circulator hit(eb), hend(hit);
   std::ostrstream error_status;
-  CGAL::set_pretty_mode ( error_status );
+  CGAL::IO::set_pretty_mode ( error_status );
   error_status << "check_is_triangulation\n";
   error_status << "on boundary:\n";
   CGAL_For_all(hit,hend) {
